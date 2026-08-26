@@ -645,6 +645,25 @@ button {
   background: var(--ink-000);
 }
 
+.camera-preview__empty {
+  position: absolute;
+  inset: auto 0 0.5rem 0;
+  text-align: center;
+}
+
+/* During calibration the preview sits opposite the active marker, so the hand
+   being aimed never covers the view of that hand. */
+.calibration__preview {
+  position: absolute;
+  bottom: 8%;
+  width: min(300px, 26vw);
+  z-index: 2;
+  box-shadow: 0 24px 60px -20px rgb(0 0 0 / 0.8);
+}
+
+.calibration__preview--left { left: 4%; }
+.calibration__preview--right { right: 4%; }
+
 .camera-preview video,
 .camera-preview canvas {
   position: absolute;
@@ -681,7 +700,7 @@ button {
   position: fixed;
   inset: 0;
   z-index: 18;
-  background: color-mix(in oklab, var(--ink-000) 82%, transparent);
+  background: color-mix(in oklab, var(--ink-000) 74%, transparent);
   backdrop-filter: blur(2px);
 }
 
@@ -723,6 +742,11 @@ button {
   text-align: center;
   display: grid;
   gap: 0.5rem;
+}
+
+.calibration__warn {
+  color: var(--accent);
+  animation: breathe 2.2s var(--ease-in-out) infinite;
 }
 
 .calibration__caption strong {

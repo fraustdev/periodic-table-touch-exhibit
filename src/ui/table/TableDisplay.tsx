@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PeriodicTable } from "./PeriodicTable";
 import { PerimeterLights, perimeterOrigin, type Pulse } from "./PerimeterLights";
 import { SetupDrawer, type HandStatus } from "./SetupDrawer";
+import { HandPreview } from "./HandPreview";
 import { MouseInteractionSource } from "../../adapters/MouseInteractionSource";
 import {
   detectWebGLSupport,
@@ -40,6 +41,7 @@ export function TableDisplay() {
   const [devices, setDevices] = useState<CameraDevice[]>([]);
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [frame, setFrame] = useState<HandFrame | null>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
   const [calibration, setCalibration] = useState<Calibration | null>(() => loadCalibration());
   const [run, setRun] = useState<CalibrationRun | null>(null);
   const [handHasSelected, setHandHasSelected] = useState(false);
@@ -172,6 +174,7 @@ export function TableDisplay() {
 
       const stream = await openCamera(deviceId ?? undefined);
       streamRef.current = stream;
+      setStream(stream);
       setDevices(await listCameras());
 
       const video = videoRef.current;
@@ -187,6 +190,7 @@ export function TableDisplay() {
           sourceRef.current = null;
           stopStream(streamRef.current);
           streamRef.current = null;
+          setStream(null);
           setHandStatus({ kind: "error", message });
         },
       });
@@ -201,6 +205,7 @@ export function TableDisplay() {
       setHandStatus({ kind: "error", message });
       stopStream(streamRef.current);
       streamRef.current = null;
+      setStream(null);
     }
   }, [deviceId, handleSample, observeFrame]);
 
@@ -322,6 +327,14 @@ export function TableDisplay() {
               ["--fill" as string]: run.progress,
             }}
           />
+          <HandPreview
+            stream={stream}
+            frame={frame}
+            className={`calibration__preview calibration__preview--${
+              target.key.includes("left") ? "right" : "left"
+            }`}
+          />
+
           <div className="calibration__caption">
             <p className="eyebrow" style={{ margin: 0 }}>
               Calibration · point {run.step + 1} of {CALIBRATION_CORNERS.length}
@@ -330,6 +343,11 @@ export function TableDisplay() {
             <p style={{ margin: 0, color: "var(--bone-400)", fontSize: "0.8125rem" }}>
               Keep still until the marker fills. Press Escape to cancel.
             </p>
+            {!frame?.landmarks && (
+              <p className="calibration__warn eyebrow">
+                No hand visible — move into the camera view
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -356,6 +374,7 @@ export function TableDisplay() {
         }}
         calibrated={calibrated}
         frame={frame}
+        stream={stream}
         videoRef={videoRef}
       />
     </main>

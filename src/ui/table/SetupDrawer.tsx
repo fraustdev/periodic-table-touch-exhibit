@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { HandPreview } from "./HandPreview";
 import type { CameraDevice } from "../../adapters/camera";
 import { STAGE_LABELS, type HandFrame } from "../../adapters/HandInteractionSource";
 import { EXHIBIT_CONFIG } from "../../domain/config";
@@ -22,17 +22,10 @@ type Props = {
   onClearCalibration: () => void;
   calibrated: boolean;
   frame: HandFrame | null;
+  stream: MediaStream | null;
   videoRef: React.RefObject<HTMLVideoElement | null>;
 };
 
-const CONNECTIONS: [number, number][] = [
-  [0, 1], [1, 2], [2, 3], [3, 4],
-  [0, 5], [5, 6], [6, 7], [7, 8],
-  [5, 9], [9, 10], [10, 11], [11, 12],
-  [9, 13], [13, 14], [14, 15], [15, 16],
-  [13, 17], [17, 18], [18, 19], [19, 20],
-  [0, 17],
-];
 
 /**
  * Operator-only surface. Camera video and landmarks live in here and nowhere
@@ -51,42 +44,9 @@ export function SetupDrawer({
   onClearCalibration,
   calibrated,
   frame,
+  stream,
   videoRef,
 }: Props) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || !open) return;
-    const context = canvas.getContext("2d");
-    if (!context) return;
-
-    const { width, height } = canvas;
-    context.clearRect(0, 0, width, height);
-    const landmarks = frame?.landmarks;
-    if (!landmarks) return;
-
-    context.strokeStyle = "rgba(217, 182, 84, 0.75)";
-    context.lineWidth = 1.5;
-    for (const [from, to] of CONNECTIONS) {
-      const a = landmarks[from];
-      const b = landmarks[to];
-      if (!a || !b) continue;
-      context.beginPath();
-      context.moveTo(a.x * width, a.y * height);
-      context.lineTo(b.x * width, b.y * height);
-      context.stroke();
-    }
-
-    landmarks.forEach((landmark, index) => {
-      const isPinchPoint = index === 4 || index === 8;
-      context.fillStyle = isPinchPoint ? "#f4eee2" : "rgba(244, 238, 226, 0.45)";
-      context.beginPath();
-      context.arc(landmark.x * width, landmark.y * height, isPinchPoint ? 4 : 2, 0, Math.PI * 2);
-      context.fill();
-    });
-  }, [frame, open]);
-
   const pinch = frame && Number.isFinite(frame.pinch) ? frame.pinch : null;
 
   return (
@@ -172,10 +132,7 @@ export function SetupDrawer({
         </label>
       )}
 
-      <div className="camera-preview">
-        <video ref={videoRef} playsInline muted />
-        <canvas ref={canvasRef} width={480} height={360} />
-      </div>
+      <HandPreview stream={stream} frame={frame} videoRef={videoRef} />
 
       <dl className="readout">
         <dt>Input</dt>
