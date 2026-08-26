@@ -6,6 +6,39 @@ import { fingertipPoint, pinchRatio, smoothPoint, type Landmark } from "./handMa
 import type { InteractionSource, Point, PointerSample } from "../domain/types";
 
 const WASM_PATH = "/mediapipe/wasm";
+
+/**
+ * MediaPipe uploads every frame as a GL texture, so a WebGL context is required
+ * even with CPU inference. Without one, the GPU delegate fails to build its
+ * graph ("kGpuService ... required by node") and the CPU delegate builds fine
+ * but throws on the first frame ("Cannot read properties of undefined (reading
+ * 'activeTexture')"). Checking up front turns both into one clear message.
+ */
+export function detectWebGLSupport(): { supported: boolean; reason: string } {
+  try {
+    const canvas = document.createElement("canvas");
+    const context =
+      canvas.getContext("webgl2") ??
+      canvas.getContext("webgl") ??
+      canvas.getContext("experimental-webgl");
+    if (!context) {
+      return {
+        supported: false,
+        reason:
+          "This browser cannot create a WebGL context, which MediaPipe requires for every frame. " +
+          "Hand tracking is unavailable until it is restored — the mouse exhibit is unaffected. " +
+          "In Chrome: Settings → System → \"Use graphics acceleration when available\", then fully " +
+          "restart the browser. Check chrome://gpu if it stays off.",
+      };
+    }
+    return { supported: true, reason: "" };
+  } catch (error) {
+    return {
+      supported: false,
+      reason: `WebGL could not be initialized (${error instanceof Error ? error.message : String(error)}). Hand tracking is unavailable; the mouse exhibit is unaffected.`,
+    };
+  }
+}
 const MODEL_PATH = "/mediapipe/models/hand_landmarker.task";
 
 /** What the setup drawer needs to show, before any calibration is applied. */
@@ -108,6 +141,9 @@ export class HandInteractionSource implements InteractionSource {
   constructor(private readonly options: Options) {}
 
   async start(listener: (sample: PointerSample) => void): Promise<void> {
+    const webgl = detectWebGLSupport();
+    if (!webgl.supported) throw new Error(webgl.reason);
+
     const fileset = await FilesetResolver.forVisionTasks(WASM_PATH);
 
     const create = (delegate: Delegate) =>

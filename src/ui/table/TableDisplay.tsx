@@ -3,7 +3,11 @@ import { PeriodicTable } from "./PeriodicTable";
 import { PerimeterLights, perimeterOrigin, type Pulse } from "./PerimeterLights";
 import { SetupDrawer, type HandStatus } from "./SetupDrawer";
 import { MouseInteractionSource } from "../../adapters/MouseInteractionSource";
-import { HandInteractionSource, type HandFrame } from "../../adapters/HandInteractionSource";
+import {
+  detectWebGLSupport,
+  HandInteractionSource,
+  type HandFrame,
+} from "../../adapters/HandInteractionSource";
 import { listCameras, openCamera, stopStream, streamLabel, type CameraDevice } from "../../adapters/camera";
 import { useExhibitEventBus } from "../../hooks/useExhibitEventBus";
 import { initialInteractionState, reduceInteraction, type InteractionState } from "../../domain/interaction";
@@ -155,6 +159,12 @@ export function TableDisplay() {
   calibrationRef.current = calibration;
 
   const enableCamera = useCallback(async () => {
+    const webgl = detectWebGLSupport();
+    if (!webgl.supported) {
+      setHandStatus({ kind: "error", message: webgl.reason });
+      return;
+    }
+
     setHandStatus({ kind: "loading" });
     try {
       sourceRef.current?.stop();
