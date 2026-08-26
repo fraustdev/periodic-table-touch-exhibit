@@ -1,0 +1,99 @@
+# Periodic Table — Touch Exhibit
+
+A screen-only prototype of a museum periodic-table installation. A visitor chooses an element on
+the table display; a second display presents it as an editorial exhibit label; a virtual
+addressable LED strip around the screen edge ripples outward from the cell that was pressed.
+
+Two input drivers produce identical behaviour: a mouse, and a webcam hand tracker (MediaPipe)
+where you point with your index finger and pinch to select.
+
+```bash
+npm install
+npm run dev          # http://localhost:5173/table  and  /info
+npm test             # 51 tests
+npm run build
+```
+
+Open `/table`, then use **Setup → Open info display** and drag that window to the second monitor.
+
+## What this is proving
+
+The real installation is a 55-inch commercial touchscreen with physical WS2812-class LEDs around
+the bezel. That hardware does not exist yet, so this prototype exists to make the eventual port
+*boring*. Three seams are held deliberately narrow:
+
+| Seam | Now | Later |
+|---|---|---|
+| **Input** | `MouseInteractionSource`, `HandInteractionSource` | `TouchDriver` — native touch events |
+| **Transport** | `BrowserEventBus` over `BroadcastChannel` | WebSocket to an authoritative local process |
+| **Light output** | 120 virtual pixels rendered as DOM segments | serial frames to an LED controller |
+
+Everything gesture-shaped stops at the driver boundary. No MediaPipe landmark ever reaches the
+interaction rules, the display, or the light layer — the only thing that crosses is a
+`PointerSample` in normalized table space, which is exactly what a touch driver would emit.
+
+The light model is a **linear array of N addressable pixels addressed by normalized arc length**,
+not ad-hoc CSS animation. An effect never contains an LED index, so the same effect maps onto a
+real strip of a different length.
+
+## Architecture
+
+```
+src/domain/      pure rules — no browser, no React
+  types.ts         the contracts every layer shares
+  config.ts        every gesture threshold, in one place
+  elementLayout.ts canonical 18-column grid + hit test (renderer reads the same numbers)
+  interaction.ts   idle → hover → armed → confirmed → cooldown state machine
+  calibration.ts   four-point homography, camera space → table space
+src/data/        118 elements, generated and committed
+src/policy/      category → colour, shared by both displays and the lights
+src/adapters/    browser edges: pointer, MediaPipe, camera, event bus
+src/ui/          React rendering only
+```
+
+`reduceInteraction` is the single path from a pointer sample to an exhibit event. The mouse is not
+a React `onClick` shortcut — it goes through the same reducer as the hand, so the two inputs
+cannot drift apart. There is a test asserting they emit byte-identical event sequences.
+
+### Deliberate constraints
+
+- **Colour never carries meaning alone.** Every category is also printed as text, on every surface.
+- **Commit is debounced per cell** (1,000 ms) rather than globally, so a visitor mashing twelve
+  different elements gets twelve responses.
+- **Validated at the boundary.** A malformed cross-window message is dropped silently. An exhibit
+  does not show error dialogs to visitors.
+- **The table's focus card** repeats the current element in the grid's empty quadrant, because a
+  finger occludes the cell it is pressing and everything just below it.
+- **Camera failure is not exhibit failure.** Denied permission, missing camera, model load failure,
+  and lost tracking all degrade to a fully working mouse exhibit.
+
+## Hand tracking
+
+Optional, and off until enabled in the Setup drawer.
+
+- Pointer: index fingertip (landmark 8), un-mirrored, exponentially smoothed.
+- Selection: pinch distance ÷ wrist-to-knuckle span, so it is scale- and distance-invariant with
+  no calibration. Engage at `0.28`, release at `0.38` — hysteresis, so it cannot flicker.
+- Calibration: hold a fingertip on each of four corner markers; the captured camera-space points
+  solve a projective transform into table space, which corrects for an off-axis camera. Stored in
+  `localStorage` and invalidated when the camera or the table geometry changes.
+- WASM and the 7.8 MB model are vendored into `public/mediapipe`, so the demo needs no network.
+
+Tune anything in `src/domain/config.ts`.
+
+## Out of scope, on purpose
+
+Dwell selection, multi-hand input, nine-point calibration, event replay, state recovery for a
+display that reloads mid-session, WebSocket/MQTT transports, and real LED control. Each has a
+seam waiting for it; none is needed to prove the interaction.
+
+## Regenerating the dataset
+
+`src/data/elements.json` is generated and committed. To rebuild it from the source dataset plus
+the authored exhibit copy:
+
+```bash
+npm run data:build
+```
+
+The generator asserts 118 records, no grid collisions, and copy present for every element.
