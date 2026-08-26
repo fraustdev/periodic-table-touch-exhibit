@@ -20,16 +20,18 @@ import {
 import { useExhibitEventBus } from "../../hooks/useExhibitEventBus";
 import { initialInteractionState, reduceInteraction, type InteractionState } from "../../domain/interaction";
 import { getCellCenter } from "../../domain/elementLayout";
-import { EXHIBIT_CONFIG } from "../../domain/config";
 import {
   CALIBRATION_CORNERS,
   clearCalibration,
   createCalibration,
+  createDefaultCalibration,
   isCalibrationValid,
   loadCalibration,
   saveCalibration,
+  validateCapturedQuad,
   type Calibration,
 } from "../../domain/calibration";
+import { reduceDwell, type DwellState } from "../../domain/calibrationDwell";
 import { CATEGORY_ORDER, getCategoryColor, getCategoryLabel } from "../../policy/categoryColors";
 import { getElement } from "../../data/elements";
 import type { Point } from "../../domain/types";
@@ -59,7 +61,11 @@ export function TableDisplay() {
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [frame, setFrame] = useState<HandFrame | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [calibration, setCalibration] = useState<Calibration | null>(() => loadCalibration());
+  const [calibration, setCalibration] = useState<Calibration | null>(
+    () => loadCalibration() ?? createDefaultCalibration(),
+  );
+  /** A finished capture awaiting the operator's confirmation. */
+  const [pending, setPending] = useState<Calibration | null>(null);
   const [run, setRun] = useState<CalibrationRun | null>(null);
   const [handHasSelected, setHandHasSelected] = useState(false);
 
@@ -108,43 +114,43 @@ export function TableDisplay() {
 
   const runRef = useRef<CalibrationRun | null>(null);
   runRef.current = run;
-  const holdRef = useRef<{ since: number; at: Point } | null>(null);
+  const dwellRef = useRef<DwellState | null>(null);
 
   const observeFrame = useCallback((next: HandFrame) => {
     setFrame(next);
 
     const active = runRef.current;
     if (!active) return;
-    const point = next.cameraPoint;
-    if (!point) {
-      holdRef.current = null;
+
+    const result = reduceDwell(dwellRef.current, next.cameraPoint, performance.now());
+    dwellRef.current = result.state;
+
+    if (result.kind === "idle") {
       setRun((current) => (current && current.progress !== 0 ? { ...current, progress: 0 } : current));
       return;
     }
 
-    const hold = holdRef.current;
-    const drifted = hold ? Math.hypot(point.x - hold.at.x, point.y - hold.at.y) > 0.035 : true;
-    if (drifted) {
-      holdRef.current = { since: performance.now(), at: point };
-      setRun((current) => (current && current.progress !== 0 ? { ...current, progress: 0 } : current));
-      return;
-    }
-
-    const held = performance.now() - hold!.since;
-    const progress = Math.min(1, held / EXHIBIT_CONFIG.calibrationHoldMs);
-
-    if (progress < 1) {
+    if (result.kind === "holding") {
       setRun((current) =>
-        current && Math.abs(current.progress - progress) > 0.02 ? { ...current, progress } : current,
+        current && Math.abs(current.progress - result.progress) > 0.02
+          ? { ...current, progress: result.progress }
+          : current,
       );
       return;
     }
 
-    // Captured. Advance, or finish and persist.
-    holdRef.current = null;
-    const captured = [...active.captured, hold!.at];
+    const captured = [...active.captured, result.point];
     if (captured.length < CALIBRATION_CORNERS.length) {
       setRun({ step: captured.length, captured, progress: 0 });
+      return;
+    }
+
+    setRun(null);
+
+    // Reject a capture that solves but maps to nonsense, with the reason.
+    const check = validateCapturedQuad(captured);
+    if (!check.ok) {
+      setHandStatus({ kind: "error", message: check.reason });
       return;
     }
 
@@ -157,16 +163,17 @@ export function TableDisplay() {
       },
       capturedAt: Date.now(),
     });
-    setRun(null);
-    if (built) {
-      saveCalibration(built);
-      setCalibration(built);
-    } else {
+
+    if (!built) {
       setHandStatus({
         kind: "error",
-        message: "Those four points were too close together to form a transform. Try again, tracing the full table.",
+        message: "Those four points did not form a usable transform. Try again, tracing a larger rectangle.",
       });
+      return;
     }
+
+    // Nothing is persisted until it has been seen working.
+    setPending(built);
   }, []);
 
   // ---- hand input ----------------------------------------------------------
@@ -181,8 +188,8 @@ export function TableDisplay() {
    */
   const startGeneration = useRef(0);
 
-  const calibrationRef = useRef(calibration);
-  calibrationRef.current = calibration;
+  const pendingRef = useRef(pending);
+  pendingRef.current = pending;
 
   const enableCamera = useCallback(async () => {
     const webgl = detectWebGLSupport();
@@ -217,7 +224,8 @@ export function TableDisplay() {
 
       source = new HandInteractionSource({
         video,
-        getTransform: () => (runRef.current ? null : calibrationRef.current?.matrix ?? null),
+        getTransform: () =>
+          runRef.current ? null : (pendingRef.current ?? effectiveRef.current).matrix,
         onFrame: observeFrame,
         onFatal: (message) => {
           if (superseded()) return;
@@ -282,17 +290,23 @@ export function TableDisplay() {
     void enableCamera();
   }, [enableCamera]);
 
-  // A calibration only holds while the camera and table geometry match.
-  const calibrated = useMemo(() => {
+  // A corner calibration only holds while the camera and table geometry match.
+  // When it no longer does, fall back to the default region rather than quietly
+  // applying a mapping that was measured against different geometry.
+  const effective = useMemo(() => {
     const surface = surfaceRef.current;
-    return isCalibrationValid(calibration, {
+    const valid = isCalibrationValid(calibration, {
       cameraLabel: streamLabel(streamRef.current),
       viewport: {
         width: surface?.clientWidth ?? window.innerWidth,
         height: surface?.clientHeight ?? window.innerHeight,
       },
     });
+    return valid && calibration ? calibration : createDefaultCalibration();
   }, [calibration, handStatus]);
+
+  const effectiveRef = useRef(effective);
+  effectiveRef.current = effective;
 
   // ---- presentation --------------------------------------------------------
 
@@ -306,6 +320,8 @@ export function TableDisplay() {
       if (event.key === "Escape") {
         setDrawerOpen(false);
         setRun(null);
+        setPending(null);
+        dwellRef.current = null;
       }
       if (event.key.toLowerCase() === "s" && event.metaKey === false && event.ctrlKey === false) {
         setDrawerOpen((open) => !open);
@@ -336,9 +352,9 @@ export function TableDisplay() {
             <span className="status__dot" />
             <span className="eyebrow">
               {handStatus.kind === "ready"
-                ? calibrated
+                ? effective.source === "corners"
                   ? "Hand + mouse"
-                  : "Hand: uncalibrated"
+                  : "Hand · default region"
                 : "Mouse input"}
             </span>
           </span>
@@ -376,7 +392,7 @@ export function TableDisplay() {
           ))}
         </div>
         <p className={`prompt${handHasSelected ? " prompt--hidden" : ""}`}>
-          {handStatus.kind === "ready" && calibrated
+          {handStatus.kind === "ready"
             ? "Point, then pinch to choose."
             : "Choose an element to begin."}
         </p>
@@ -413,6 +429,42 @@ export function TableDisplay() {
         </div>
       )}
 
+      {pending && (
+        <div className="verify">
+          <div className="verify__copy">
+            <p className="eyebrow" style={{ margin: 0 }}>
+              Check the calibration
+            </p>
+            <strong>Point around the table — the marker should follow your finger</strong>
+            <p style={{ margin: 0, color: "var(--bone-400)", fontSize: "0.8125rem" }}>
+              Nothing is saved until you confirm. Try a corner and the middle.
+            </p>
+          </div>
+          <div className="verify__actions">
+            <button
+              className="button button--primary"
+              onClick={() => {
+                saveCalibration(pending);
+                setCalibration(pending);
+                setPending(null);
+              }}
+            >
+              Looks right
+            </button>
+            <button
+              className="button"
+              onClick={() => {
+                setPending(null);
+                dwellRef.current = null;
+                setRun({ step: 0, captured: [], progress: 0 });
+              }}
+            >
+              Redo
+            </button>
+          </div>
+        </div>
+      )}
+
       <SetupDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
@@ -425,13 +477,15 @@ export function TableDisplay() {
           window.open("/info", "exhibit-info", "popup=yes,width=1280,height=800");
         }}
         onStartCalibration={() => {
-          holdRef.current = null;
+          dwellRef.current = null;
+          setPending(null);
           setRun({ step: 0, captured: [], progress: 0 });
           setDrawerOpen(false);
         }}
         onClearCalibration={() => {
           clearCalibration();
-          setCalibration(null);
+          setPending(null);
+          setCalibration(createDefaultCalibration());
         }}
         buildReport={() => {
           const video = videoRef.current;
@@ -442,7 +496,7 @@ export function TableDisplay() {
               userAgent: navigator.userAgent,
               webgl: detectWebGLSupport(),
               handStatus,
-              calibrated,
+              calibrationSource: effective.source,
               calibration: calibration
                 ? { cameraLabel: calibration.cameraLabel, viewport: calibration.viewport }
                 : null,
@@ -499,7 +553,7 @@ export function TableDisplay() {
             // ignored
           }
         }}
-        calibrated={calibrated}
+        calibrationSource={effective.source}
         frame={frame}
         stream={stream}
         videoRef={videoRef}

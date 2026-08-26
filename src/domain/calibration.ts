@@ -1,3 +1,4 @@
+import { EXHIBIT_CONFIG } from "./config";
 import type { Point } from "./types";
 
 export type Matrix3 = readonly [number, number, number, number, number, number, number, number, number];
@@ -15,9 +16,106 @@ export type Calibration = {
   cameraLabel: string;
   viewport: { width: number; height: number };
   capturedAt: number;
+  /** "default" mappings apply to any camera and are never invalidated. */
+  source: "default" | "corners";
 };
 
 const STORAGE_KEY = "periodic-exhibit.calibration.v1";
+
+/**
+ * The mapping used before anyone calibrates: the central region of the camera
+ * frame, axis-aligned, covering the whole table. Hand tracking is therefore
+ * useful immediately, and corner calibration becomes a refinement that corrects
+ * for an off-axis camera rather than a gate that unlocks the feature.
+ */
+export function defaultRegionPoints(inset = EXHIBIT_CONFIG.defaultRegionInset): Point[] {
+  const low = inset;
+  const high = 1 - inset;
+  return [
+    { x: low, y: low },
+    { x: high, y: low },
+    { x: high, y: high },
+    { x: low, y: high },
+  ];
+}
+
+export function createDefaultCalibration(): Calibration {
+  const matrix = solveHomography(defaultRegionPoints(), CALIBRATION_CORNERS.map((c) => c.target));
+  if (!matrix) throw new Error("The default region is degenerate.");
+  return {
+    matrix,
+    cameraLabel: "*",
+    viewport: { width: 0, height: 0 },
+    capturedAt: 0,
+    source: "default",
+  };
+}
+
+export type QuadCheck = { ok: true } | { ok: false; reason: string };
+
+/** Twice the signed area of a polygon; sign carries the winding direction. */
+function signedArea(points: readonly Point[]): number {
+  let total = 0;
+  for (let i = 0; i < points.length; i += 1) {
+    const a = points[i];
+    const b = points[(i + 1) % points.length];
+    total += a.x * b.y - b.x * a.y;
+  }
+  return total;
+}
+
+/**
+ * A singular matrix is not the only bad capture. Points taken out of order, or
+ * within a tiny patch of the frame, still solve to a transform — one that maps
+ * the table onto nonsense. Reject those here, with a reason worth showing.
+ */
+export function validateCapturedQuad(points: readonly Point[]): QuadCheck {
+  if (points.length !== 4) return { ok: false, reason: "Four points are required." };
+
+  const area = Math.abs(signedArea(points)) / 2;
+  if (area < EXHIBIT_CONFIG.minCalibrationArea) {
+    return {
+      ok: false,
+      reason:
+        "Those four points cover too little of the camera view. Trace a larger rectangle — roughly shoulder width, at arm's length.",
+    };
+  }
+
+  // Convexity: every turn must bend the same way.
+  let sign = 0;
+  for (let i = 0; i < 4; i += 1) {
+    const a = points[i];
+    const b = points[(i + 1) % 4];
+    const c = points[(i + 2) % 4];
+    const cross = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
+    if (Math.abs(cross) < 1e-9) continue;
+    const current = Math.sign(cross);
+    if (sign === 0) sign = current;
+    else if (current !== sign) {
+      return {
+        ok: false,
+        reason:
+          "Those points cross over each other. Take them in order: top left, top right, bottom right, bottom left.",
+      };
+    }
+  }
+
+  const [topLeft, topRight, bottomRight, bottomLeft] = points;
+  if (topLeft.x >= topRight.x || bottomLeft.x >= bottomRight.x) {
+    return {
+      ok: false,
+      reason: "The left points came out to the right of the right ones. Take them in the order shown.",
+    };
+  }
+  if (topLeft.y >= bottomLeft.y || topRight.y >= bottomRight.y) {
+    return {
+      ok: false,
+      reason: "The top points came out below the bottom ones. Take them in the order shown.",
+    };
+  }
+
+  return { ok: true };
+}
 
 /** Solves the 8x8 system for a projective transform taking src → dst. */
 export function solveHomography(src: readonly Point[], dst: readonly Point[]): Matrix3 | null {
@@ -71,12 +169,13 @@ export function createCalibration(
   cameraPoints: readonly Point[],
   meta: { cameraLabel: string; viewport: { width: number; height: number }; capturedAt: number },
 ): Calibration | null {
+  if (!validateCapturedQuad(cameraPoints).ok) return null;
   const matrix = solveHomography(
     cameraPoints,
     CALIBRATION_CORNERS.map((corner) => corner.target),
   );
   if (!matrix) return null;
-  return { matrix, ...meta };
+  return { matrix, ...meta, source: "corners" };
 }
 
 /** A calibration only survives while the camera and the table geometry match. */
@@ -85,6 +184,8 @@ export function isCalibrationValid(
   current: { cameraLabel: string; viewport: { width: number; height: number } },
 ): boolean {
   if (!calibration) return false;
+  // The default region is camera- and geometry-agnostic, so nothing invalidates it.
+  if (calibration.source === "default") return true;
   if (calibration.cameraLabel !== current.cameraLabel) return false;
   return (
     Math.abs(calibration.viewport.width - current.viewport.width) < 1 &&
@@ -98,7 +199,7 @@ export function loadCalibration(storage: Storage | undefined = safeStorage()): C
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Calibration;
     if (!Array.isArray(parsed.matrix) || parsed.matrix.length !== 9) return null;
-    return parsed;
+    return { ...parsed, source: parsed.source === "default" ? "default" : "corners" };
   } catch {
     return null;
   }

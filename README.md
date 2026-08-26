@@ -74,9 +74,17 @@ Optional, and off until enabled in the Setup drawer.
 - Pointer: index fingertip (landmark 8), un-mirrored, exponentially smoothed.
 - Selection: pinch distance ÷ wrist-to-knuckle span, so it is scale- and distance-invariant with
   no calibration. Engage at `0.28`, release at `0.38` — hysteresis, so it cannot flicker.
-- Calibration: hold a fingertip on each of four corner markers; the captured camera-space points
-  solve a projective transform into table space, which corrects for an off-axis camera. Stored in
-  `localStorage` and invalidated when the camera or the table geometry changes.
+- **Default mapping:** the central region of the camera frame maps to the whole table, so hand
+  tracking works the moment the camera starts. Calibration is a refinement, never a gate.
+- **Corner calibration:** hold a fingertip on each of four markers; the captured camera-space
+  points solve a projective transform into table space, correcting for an off-axis camera. The
+  dwell captures the *mean* of the whole hold rather than the sample that started it, and forgives
+  a brief wobble instead of restarting — an unsupported hand always drifts.
+- **Validated before use:** a capture that is too small, taken out of order, or self-crossing still
+  solves to a transform, so the quadrilateral is checked for area, convexity, and winding, and
+  rejected with a reason. Nothing is persisted until the operator has watched the marker track a
+  finger and confirmed it. A stored calibration whose camera or geometry no longer matches falls
+  back to the default region rather than being applied anyway.
 - WASM and the 7.8 MB model are vendored into `public/mediapipe`, so the demo needs no network.
 
 Tune anything in `src/domain/config.ts`.

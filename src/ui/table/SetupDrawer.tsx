@@ -22,7 +22,7 @@ type Props = {
   onStartCalibration: () => void;
   onOpenInfoWindow: () => void;
   onClearCalibration: () => void;
-  calibrated: boolean;
+  calibrationSource: "default" | "corners" | null;
   frame: HandFrame | null;
   stream: MediaStream | null;
   videoRef: React.RefObject<HTMLVideoElement | null>;
@@ -79,7 +79,7 @@ export function SetupDrawer({
   onStartCalibration,
   onOpenInfoWindow,
   onClearCalibration,
-  calibrated,
+  calibrationSource,
   frame,
   stream,
   videoRef,
@@ -108,10 +108,10 @@ export function SetupDrawer({
           {frame.diagnostics.lastError}
         </div>
       )}
-      {status.kind === "ready" && !calibrated && (
+      {status.kind === "ready" && calibrationSource === "default" && (
         <div className="notice">
-          Hand tracking is running but the table geometry is unknown. Calibrate the four corners to
-          enable pinch selection.
+          Using the default camera region: the middle of the frame maps to the whole table. Calibrate
+          the corners if the pointer feels offset, or if the camera is off to one side.
         </div>
       )}
 
@@ -154,9 +154,9 @@ export function SetupDrawer({
         >
           Calibrate corners
         </button>
-        {calibrated && (
+        {calibrationSource === "corners" && (
           <button className="button" onClick={onClearCalibration}>
-            Clear
+            Reset to default
           </button>
         )}
         {status.kind === "ready" && (
@@ -188,7 +188,13 @@ export function SetupDrawer({
         <dt>Input</dt>
         <dd>{status.kind === "ready" ? "Mouse + hand" : "Mouse"}</dd>
         <dt>Calibration</dt>
-        <dd>{calibrated ? "Valid" : "None"}</dd>
+        <dd>
+          {calibrationSource === "corners"
+            ? "Four corners"
+            : calibrationSource === "default"
+              ? "Default region"
+              : "None"}
+        </dd>
         <dt>Pipeline</dt>
         <dd>{frame ? STAGE_LABELS[frame.diagnostics.activeStage] : "Not started"}</dd>
         <dt>Tracking</dt>
