@@ -15,7 +15,10 @@ export type HandFrame = {
   confidence: number;
   landmarks: readonly Landmark[] | null;
   fps: number;
+  delegate: Delegate;
 };
+
+export type Delegate = "GPU" | "CPU";
 
 type Options = {
   video: HTMLVideoElement;
@@ -31,6 +34,7 @@ type Options = {
  */
 export class HandInteractionSource implements InteractionSource {
   private landmarker: HandLandmarker | null = null;
+  private delegate: Delegate = "GPU";
   private frameHandle = 0;
   private running = false;
   private engaged = false;
@@ -43,14 +47,28 @@ export class HandInteractionSource implements InteractionSource {
 
   async start(listener: (sample: PointerSample) => void): Promise<void> {
     const fileset = await FilesetResolver.forVisionTasks(WASM_PATH);
-    this.landmarker = await HandLandmarker.createFromOptions(fileset, {
-      baseOptions: { modelAssetPath: MODEL_PATH, delegate: "GPU" },
-      runningMode: "VIDEO",
-      numHands: 1,
-      minHandDetectionConfidence: 0.5,
-      minHandPresenceConfidence: 0.5,
-      minTrackingConfidence: 0.5,
-    });
+
+    const create = (delegate: Delegate) =>
+      HandLandmarker.createFromOptions(fileset, {
+        baseOptions: { modelAssetPath: MODEL_PATH, delegate },
+        runningMode: "VIDEO",
+        numHands: 1,
+        minHandDetectionConfidence: 0.5,
+        minHandPresenceConfidence: 0.5,
+        minTrackingConfidence: 0.5,
+      });
+
+    // The GPU delegate needs a WebGL context, which a browser with hardware
+    // acceleration disabled will refuse. CPU inference is slower but works
+    // everywhere, and a slower demo beats no demo.
+    try {
+      this.landmarker = await create("GPU");
+      this.delegate = "GPU";
+    } catch (gpuError) {
+      console.warn("MediaPipe GPU delegate unavailable, falling back to CPU.", gpuError);
+      this.landmarker = await create("CPU");
+      this.delegate = "CPU";
+    }
 
     this.running = true;
     const tick = () => {
@@ -98,14 +116,21 @@ export class HandInteractionSource implements InteractionSource {
     if (!landmarks || confidence < EXHIBIT_CONFIG.minConfidence) {
       this.engaged = false;
       this.smoothed = null;
-      onFrame?.({ cameraPoint: null, pinch: Number.NaN, confidence, landmarks: null, fps: this.fps });
+      onFrame?.({
+        cameraPoint: null,
+        pinch: Number.NaN,
+        confidence,
+        landmarks: null,
+        fps: this.fps,
+        delegate: this.delegate,
+      });
       listener({ point: null, engaged: false, confidence, source: "hand" });
       return;
     }
 
     const cameraPoint = fingertipPoint(landmarks);
     const pinch = pinchRatio(landmarks);
-    onFrame?.({ cameraPoint, pinch, confidence, landmarks, fps: this.fps });
+    onFrame?.({ cameraPoint, pinch, confidence, landmarks, fps: this.fps, delegate: this.delegate });
 
     const transform = getTransform();
     if (!cameraPoint || !transform) {

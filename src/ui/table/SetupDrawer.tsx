@@ -184,7 +184,10 @@ export function SetupDrawer({
           {pinch !== null && pinch <= EXHIBIT_CONFIG.pinchEngage ? " · closed" : ""}
         </dd>
         <dt>Detect rate</dt>
-        <dd>{frame && frame.fps > 0 ? `${frame.fps.toFixed(0)} fps` : "—"}</dd>
+        <dd>
+          {frame && frame.fps > 0 ? `${frame.fps.toFixed(0)} fps` : "—"}
+          {frame ? ` · ${frame.delegate}` : ""}
+        </dd>
       </dl>
 
       <p style={{ fontSize: "0.6875rem" }}>
