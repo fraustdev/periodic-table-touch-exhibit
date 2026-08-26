@@ -18,6 +18,7 @@ type Props = {
   onSelectDevice: (deviceId: string) => void;
   onEnableCamera: () => void;
   onDisableCamera: () => void;
+  buildReport: () => string;
   onStartCalibration: () => void;
   onOpenInfoWindow: () => void;
   onClearCalibration: () => void;
@@ -74,6 +75,7 @@ export function SetupDrawer({
   onSelectDevice,
   onEnableCamera,
   onDisableCamera,
+  buildReport,
   onStartCalibration,
   onOpenInfoWindow,
   onClearCalibration,
@@ -202,6 +204,19 @@ export function SetupDrawer({
           {frame ? ` · ${frame.delegate}` : ""}
         </dd>
       </dl>
+
+      <div className="drawer__row">
+        <button
+          className="button"
+          onClick={() => {
+            const report = buildReport();
+            void navigator.clipboard?.writeText(report).catch(() => {});
+            console.log(report);
+          }}
+        >
+          Copy diagnostics
+        </button>
+      </div>
 
       {frame && (
         <details>

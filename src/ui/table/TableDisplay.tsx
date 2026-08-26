@@ -173,6 +173,13 @@ export function TableDisplay() {
 
   const streamRef = useRef<MediaStream | null>(null);
   const sourceRef = useRef<HandInteractionSource | null>(null);
+  /**
+   * Auto-resume and a manual click can both call enableCamera. Without a
+   * generation token the later call tears down the earlier call's stream after
+   * the earlier call has already attached it, leaving a landmarker reading a
+   * dead video — a camera that looks on but never advances a frame.
+   */
+  const startGeneration = useRef(0);
 
   const calibrationRef = useRef(calibration);
   calibrationRef.current = calibration;
@@ -184,26 +191,36 @@ export function TableDisplay() {
       return;
     }
 
-    setHandStatus({ kind: "loading" });
-    try {
-      sourceRef.current?.stop();
-      stopStream(streamRef.current);
+    const generation = (startGeneration.current += 1);
+    const superseded = () => generation !== startGeneration.current;
 
-      const stream = await openCamera(deviceId ?? undefined);
-      streamRef.current = stream;
-      setStream(stream);
-      setDevices(await listCameras());
+    // Tear down synchronously, so nothing that follows can adopt stale handles.
+    sourceRef.current?.stop();
+    sourceRef.current = null;
+    stopStream(streamRef.current);
+    streamRef.current = null;
+    setStream(null);
+    setFrame(null);
+    setHandStatus({ kind: "loading" });
+
+    let stream: MediaStream | null = null;
+    let source: HandInteractionSource | null = null;
+    try {
+      stream = await openCamera(deviceId ?? undefined);
+      if (superseded()) return stopStream(stream);
 
       const video = videoRef.current;
-      if (!video) throw new Error("Camera preview is not mounted.");
+      if (!video) throw new Error("The camera preview is not mounted.");
       video.srcObject = stream;
       await video.play();
+      if (superseded()) return stopStream(stream);
 
-      const source = new HandInteractionSource({
+      source = new HandInteractionSource({
         video,
         getTransform: () => (runRef.current ? null : calibrationRef.current?.matrix ?? null),
         onFrame: observeFrame,
         onFatal: (message) => {
+          if (superseded()) return;
           sourceRef.current = null;
           stopStream(streamRef.current);
           streamRef.current = null;
@@ -212,7 +229,15 @@ export function TableDisplay() {
         },
       });
       await source.start(handleSample);
+      if (superseded()) {
+        source.stop();
+        return stopStream(stream);
+      }
+
+      streamRef.current = stream;
       sourceRef.current = source;
+      setStream(stream);
+      setDevices(await listCameras());
       setHandStatus({ kind: "ready" });
       try {
         localStorage.setItem(HAND_ENABLED_KEY, "1");
@@ -220,10 +245,12 @@ export function TableDisplay() {
         // A locked-down browser just loses the convenience, not the exhibit.
       }
     } catch (error) {
-      setHandStatus({ kind: "error", message: describeCameraError(error) });
-      stopStream(streamRef.current);
+      source?.stop();
+      stopStream(stream);
+      if (superseded()) return;
       streamRef.current = null;
       setStream(null);
+      setHandStatus({ kind: "error", message: describeCameraError(error) });
     }
   }, [deviceId, handleSample, observeFrame]);
 
@@ -409,6 +436,58 @@ export function TableDisplay() {
         onClearCalibration={() => {
           clearCalibration();
           setCalibration(null);
+        }}
+        buildReport={() => {
+          const video = videoRef.current;
+          const track = streamRef.current?.getVideoTracks()[0];
+          return JSON.stringify(
+            {
+              when: new Date().toISOString(),
+              userAgent: navigator.userAgent,
+              webgl: detectWebGLSupport(),
+              handStatus,
+              calibrated,
+              calibration: calibration
+                ? { cameraLabel: calibration.cameraLabel, viewport: calibration.viewport }
+                : null,
+              devices,
+              selectedDeviceId: deviceId,
+              stream: streamRef.current
+                ? {
+                    active: streamRef.current.active,
+                    tracks: streamRef.current.getTracks().length,
+                    label: track?.label,
+                    readyState: track?.readyState,
+                    enabled: track?.enabled,
+                    muted: track?.muted,
+                    settings: track?.getSettings?.(),
+                  }
+                : null,
+              video: video
+                ? {
+                    readyState: video.readyState,
+                    size: `${video.videoWidth}x${video.videoHeight}`,
+                    paused: video.paused,
+                    currentTime: video.currentTime,
+                    hasSrcObject: !!video.srcObject,
+                    srcMatchesStream: video.srcObject === streamRef.current,
+                  }
+                : null,
+              driverAttached: !!sourceRef.current,
+              frame: frame
+                ? {
+                    fps: Math.round(frame.fps),
+                    delegate: frame.delegate,
+                    confidence: frame.confidence,
+                    pinch: frame.pinch,
+                    hasLandmarks: !!frame.landmarks,
+                    diagnostics: frame.diagnostics,
+                  }
+                : null,
+            },
+            null,
+            2,
+          );
         }}
         onDisableCamera={() => {
           sourceRef.current?.stop();
