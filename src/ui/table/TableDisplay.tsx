@@ -392,27 +392,23 @@ export function TableDisplay() {
               ["--fill" as string]: run.progress,
             }}
           />
-          <HandPreview
-            stream={stream}
-            frame={frame}
-            className={`calibration__preview calibration__preview--${
-              target.key.includes("left") ? "right" : "left"
-            }`}
-          />
+          <div className="calibration__center">
+            <HandPreview stream={stream} frame={frame} className="calibration__preview" />
 
-          <div className="calibration__caption">
-            <p className="eyebrow" style={{ margin: 0 }}>
-              Calibration · point {run.step + 1} of {CALIBRATION_CORNERS.length}
-            </p>
-            <strong>Hold your fingertip on the {target.label.toLowerCase()} marker</strong>
-            <p style={{ margin: 0, color: "var(--bone-400)", fontSize: "0.8125rem" }}>
-              Keep still until the marker fills. Press Escape to cancel.
-            </p>
-            {!frame?.landmarks && (
-              <p className="calibration__warn eyebrow">
-                No hand visible — move into the camera view
+            <div className="calibration__caption">
+              <p className="eyebrow" style={{ margin: 0 }}>
+                Calibration · point {run.step + 1} of {CALIBRATION_CORNERS.length}
               </p>
-            )}
+              <strong>Hold your fingertip on the {target.label.toLowerCase()} marker</strong>
+              <p style={{ margin: 0, color: "var(--bone-400)", fontSize: "0.8125rem" }}>
+                Keep still until the marker fills. Press Escape to cancel.
+              </p>
+              {!frame?.landmarks && (
+                <p className="calibration__warn eyebrow">
+                  No hand visible — move into the camera view
+                </p>
+              )}
+            </div>
           </div>
         </div>
       )}
