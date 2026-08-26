@@ -190,6 +190,36 @@ export function SetupDrawer({
         </dd>
       </dl>
 
+      {frame && (
+        <details>
+          <summary className="eyebrow" style={{ cursor: "pointer" }}>
+            Pipeline diagnostics
+          </summary>
+          <dl className="readout" style={{ marginTop: "0.6rem" }}>
+            <dt>Video</dt>
+            <dd>
+              {frame.diagnostics.videoSize} · ready {frame.diagnostics.videoReadyState} ·{" "}
+              {frame.diagnostics.videoPaused ? "paused" : "playing"}
+            </dd>
+            <dt>Track</dt>
+            <dd>{frame.diagnostics.trackState}</dd>
+            <dt>Frames</dt>
+            <dd>
+              {frame.diagnostics.detections} detected / {frame.diagnostics.ticks} ticks
+            </dd>
+            <dt>No hand found</dt>
+            <dd>{frame.diagnostics.emptyResults}</dd>
+            <dt>Detect errors</dt>
+            <dd>{frame.diagnostics.detectErrors}</dd>
+          </dl>
+          {frame.diagnostics.lastError && (
+            <div className="notice" style={{ marginTop: "0.6rem" }}>
+              {frame.diagnostics.lastError}
+            </div>
+          )}
+        </details>
+      )}
+
       <p style={{ fontSize: "0.6875rem" }}>
         Thresholds: engage at {EXHIBIT_CONFIG.pinchEngage}, release at {EXHIBIT_CONFIG.pinchRelease},
         same-cell debounce {EXHIBIT_CONFIG.sameCellDebounceMs} ms. All in{" "}

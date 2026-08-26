@@ -16,9 +16,26 @@ export type HandFrame = {
   landmarks: readonly Landmark[] | null;
   fps: number;
   delegate: Delegate;
+  diagnostics: HandDiagnostics;
 };
 
 export type Delegate = "GPU" | "CPU";
+
+/** Enough to tell where the pipeline stopped, without opening a debugger. */
+export type HandDiagnostics = {
+  /** Frames the render loop has attempted. */
+  ticks: number;
+  /** Frames actually handed to the model. */
+  detections: number;
+  videoReadyState: number;
+  videoSize: string;
+  videoPaused: boolean;
+  trackState: string;
+  detectErrors: number;
+  lastError: string | null;
+  /** Frames where the model ran but found no hand. */
+  emptyResults: number;
+};
 
 type Options = {
   video: HTMLVideoElement;
@@ -42,6 +59,22 @@ export class HandInteractionSource implements InteractionSource {
   private lastVideoTime = -1;
   private lastFrameAt = 0;
   private fps = 0;
+  private diagnostics: HandDiagnostics = {
+    ticks: 0,
+    detections: 0,
+    videoReadyState: 0,
+    videoSize: "0×0",
+    videoPaused: true,
+    trackState: "none",
+    detectErrors: 0,
+    lastError: null,
+    emptyResults: 0,
+  };
+
+  /** Current diagnostics, for callers that want them outside a frame. */
+  getDiagnostics(): HandDiagnostics {
+    return { ...this.diagnostics };
+  }
 
   constructor(private readonly options: Options) {}
 
@@ -53,9 +86,9 @@ export class HandInteractionSource implements InteractionSource {
         baseOptions: { modelAssetPath: MODEL_PATH, delegate },
         runningMode: "VIDEO",
         numHands: 1,
-        minHandDetectionConfidence: 0.5,
-        minHandPresenceConfidence: 0.5,
-        minTrackingConfidence: 0.5,
+        minHandDetectionConfidence: 0.35,
+        minHandPresenceConfidence: 0.35,
+        minTrackingConfidence: 0.35,
       });
 
     // The GPU delegate needs a WebGL context, which a browser with hardware
@@ -90,10 +123,50 @@ export class HandInteractionSource implements InteractionSource {
 
   private detect(listener: (sample: PointerSample) => void): void {
     const { video, getTransform, onFrame } = this.options;
-    if (!this.landmarker || video.readyState < 2) return;
+    const diagnostics = this.diagnostics;
 
-    // MediaPipe rejects a repeated timestamp, so skip frames the camera has not advanced.
-    if (video.currentTime === this.lastVideoTime) return;
+    diagnostics.ticks += 1;
+    diagnostics.videoReadyState = video.readyState;
+    diagnostics.videoSize = `${video.videoWidth}×${video.videoHeight}`;
+    diagnostics.videoPaused = video.paused;
+    const track = (video.srcObject as MediaStream | null)?.getVideoTracks?.()[0];
+    diagnostics.trackState = track ? `${track.readyState}${track.enabled ? "" : " (disabled)"}` : "none";
+
+    /** Always report, even on an early return, so the readout proves liveness. */
+    const report = (over: Partial<HandFrame> = {}) =>
+      onFrame?.({
+        cameraPoint: null,
+        pinch: Number.NaN,
+        confidence: 0,
+        landmarks: null,
+        fps: this.fps,
+        delegate: this.delegate,
+        diagnostics: { ...diagnostics },
+        ...over,
+      });
+
+    const clear = (confidence: number) => {
+      this.engaged = false;
+      this.smoothed = null;
+      listener({ point: null, engaged: false, confidence, source: "hand" });
+    };
+
+    if (!this.landmarker) {
+      report();
+      return;
+    }
+
+    if (video.readyState < 2) {
+      report();
+      return;
+    }
+
+    // MediaPipe rejects a repeated timestamp, so skip frames the camera has not
+    // advanced. A frozen currentTime means no frames are arriving at all.
+    if (video.currentTime === this.lastVideoTime) {
+      report();
+      return;
+    }
     this.lastVideoTime = video.currentTime;
 
     const now = performance.now();
@@ -106,31 +179,33 @@ export class HandInteractionSource implements InteractionSource {
     let result;
     try {
       result = this.landmarker.detectForVideo(video, now);
-    } catch {
-      return; // a dropped frame is not a fault
+      diagnostics.detections += 1;
+    } catch (error) {
+      diagnostics.detectErrors += 1;
+      diagnostics.lastError = error instanceof Error ? error.message : String(error);
+      report();
+      return;
     }
 
     const landmarks = result.landmarks?.[0] ?? null;
-    const confidence = result.handedness?.[0]?.[0]?.score ?? 0;
+    const confidence = result.handedness?.[0]?.[0]?.score ?? result.handednesses?.[0]?.[0]?.score ?? 0;
 
-    if (!landmarks || confidence < EXHIBIT_CONFIG.minConfidence) {
-      this.engaged = false;
-      this.smoothed = null;
-      onFrame?.({
-        cameraPoint: null,
-        pinch: Number.NaN,
-        confidence,
-        landmarks: null,
-        fps: this.fps,
-        delegate: this.delegate,
-      });
-      listener({ point: null, engaged: false, confidence, source: "hand" });
+    if (!landmarks) {
+      diagnostics.emptyResults += 1;
+      report({ confidence });
+      clear(confidence);
+      return;
+    }
+
+    if (confidence < EXHIBIT_CONFIG.minConfidence) {
+      report({ confidence, landmarks });
+      clear(confidence);
       return;
     }
 
     const cameraPoint = fingertipPoint(landmarks);
     const pinch = pinchRatio(landmarks);
-    onFrame?.({ cameraPoint, pinch, confidence, landmarks, fps: this.fps, delegate: this.delegate });
+    report({ cameraPoint, pinch, confidence, landmarks });
 
     const transform = getTransform();
     if (!cameraPoint || !transform) {
