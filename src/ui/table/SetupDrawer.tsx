@@ -17,6 +17,7 @@ type Props = {
   selectedDeviceId: string | null;
   onSelectDevice: (deviceId: string) => void;
   onEnableCamera: () => void;
+  onDisableCamera: () => void;
   onStartCalibration: () => void;
   onOpenInfoWindow: () => void;
   onClearCalibration: () => void;
@@ -39,6 +40,7 @@ export function SetupDrawer({
   selectedDeviceId,
   onSelectDevice,
   onEnableCamera,
+  onDisableCamera,
   onStartCalibration,
   onOpenInfoWindow,
   onClearCalibration,
@@ -112,6 +114,11 @@ export function SetupDrawer({
         {calibrated && (
           <button className="button" onClick={onClearCalibration}>
             Clear
+          </button>
+        )}
+        {status.kind === "ready" && (
+          <button className="button" onClick={onDisableCamera}>
+            Turn off
           </button>
         )}
       </div>

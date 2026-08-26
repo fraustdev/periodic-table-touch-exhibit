@@ -9,7 +9,14 @@ import {
   HandInteractionSource,
   type HandFrame,
 } from "../../adapters/HandInteractionSource";
-import { listCameras, openCamera, stopStream, streamLabel, type CameraDevice } from "../../adapters/camera";
+import {
+  describeCameraError,
+  listCameras,
+  openCamera,
+  stopStream,
+  streamLabel,
+  type CameraDevice,
+} from "../../adapters/camera";
 import { useExhibitEventBus } from "../../hooks/useExhibitEventBus";
 import { initialInteractionState, reduceInteraction, type InteractionState } from "../../domain/interaction";
 import { getCellCenter } from "../../domain/elementLayout";
@@ -28,6 +35,16 @@ import { getElement } from "../../data/elements";
 import type { Point } from "../../domain/types";
 
 type CalibrationRun = { step: number; captured: Point[]; progress: number };
+
+const HAND_ENABLED_KEY = "periodic-exhibit.hand-enabled.v1";
+
+function wasHandEnabled(): boolean {
+  try {
+    return localStorage.getItem(HAND_ENABLED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
 
 export function TableDisplay() {
   const surfaceRef = useRef<HTMLDivElement>(null);
@@ -197,12 +214,13 @@ export function TableDisplay() {
       await source.start(handleSample);
       sourceRef.current = source;
       setHandStatus({ kind: "ready" });
+      try {
+        localStorage.setItem(HAND_ENABLED_KEY, "1");
+      } catch {
+        // A locked-down browser just loses the convenience, not the exhibit.
+      }
     } catch (error) {
-      const message =
-        error instanceof DOMException && error.name === "NotAllowedError"
-          ? "Camera access was denied. The exhibit stays fully usable with a mouse."
-          : `Hand tracking could not start: ${error instanceof Error ? error.message : String(error)}. The exhibit stays fully usable with a mouse.`;
-      setHandStatus({ kind: "error", message });
+      setHandStatus({ kind: "error", message: describeCameraError(error) });
       stopStream(streamRef.current);
       streamRef.current = null;
       setStream(null);
@@ -216,6 +234,26 @@ export function TableDisplay() {
     },
     [],
   );
+
+  // Release the device before the page goes away, so a reload does not find its
+  // own previous instance still holding the camera.
+  useEffect(() => {
+    const release = () => {
+      sourceRef.current?.stop();
+      stopStream(streamRef.current);
+    };
+    window.addEventListener("pagehide", release);
+    return () => window.removeEventListener("pagehide", release);
+  }, []);
+
+  // Come back up the way it went down. Permission is already granted at this
+  // point, so this does not prompt; if it fails, the mouse exhibit is intact.
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (autoStarted.current || !wasHandEnabled()) return;
+    autoStarted.current = true;
+    void enableCamera();
+  }, [enableCamera]);
 
   // A calibration only holds while the camera and table geometry match.
   const calibrated = useMemo(() => {
@@ -371,6 +409,20 @@ export function TableDisplay() {
         onClearCalibration={() => {
           clearCalibration();
           setCalibration(null);
+        }}
+        onDisableCamera={() => {
+          sourceRef.current?.stop();
+          sourceRef.current = null;
+          stopStream(streamRef.current);
+          streamRef.current = null;
+          setStream(null);
+          setFrame(null);
+          setHandStatus({ kind: "off" });
+          try {
+            localStorage.removeItem(HAND_ENABLED_KEY);
+          } catch {
+            // ignored
+          }
         }}
         calibrated={calibrated}
         frame={frame}
