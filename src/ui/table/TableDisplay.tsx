@@ -183,6 +183,12 @@ export function TableDisplay() {
         video,
         getTransform: () => (runRef.current ? null : calibrationRef.current?.matrix ?? null),
         onFrame: observeFrame,
+        onFatal: (message) => {
+          sourceRef.current = null;
+          stopStream(streamRef.current);
+          streamRef.current = null;
+          setHandStatus({ kind: "error", message });
+        },
       });
       await source.start(handleSample);
       sourceRef.current = source;

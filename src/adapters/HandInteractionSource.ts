@@ -93,16 +93,23 @@ export type HandDiagnostics = {
   videoPaused: boolean;
   trackState: string;
   detectErrors: number;
+  /** Consecutive failures; the loop gives up rather than crashing the wasm. */
+  consecutiveErrors: number;
   lastError: string | null;
   /** Frames where the model ran but found no hand. */
   emptyResults: number;
 };
+
+/** After this many consecutive failures the driver stops itself. */
+const ERROR_LIMIT = 8;
 
 type Options = {
   video: HTMLVideoElement;
   /** Camera-space → table-space transform. Null while uncalibrated. */
   getTransform: () => Matrix3 | null;
   onFrame?: (frame: HandFrame) => void;
+  /** Called once when the driver shuts itself down after repeated failures. */
+  onFatal?: (message: string) => void;
 };
 
 /**
@@ -129,6 +136,7 @@ export class HandInteractionSource implements InteractionSource {
     videoPaused: true,
     trackState: "none",
     detectErrors: 0,
+    consecutiveErrors: 0,
     lastError: null,
     emptyResults: 0,
   };
@@ -247,10 +255,20 @@ export class HandInteractionSource implements InteractionSource {
     try {
       result = this.landmarker.detectForVideo(video, now);
       diagnostics.detections += 1;
+      diagnostics.consecutiveErrors = 0;
     } catch (error) {
       diagnostics.detectErrors += 1;
+      diagnostics.consecutiveErrors += 1;
       diagnostics.lastError = error instanceof Error ? error.message : String(error);
       report("detect-threw");
+
+      // A failing graph does not recover, and hammering it piles up queued
+      // frames until the wasm faults and takes the page down with it.
+      if (diagnostics.consecutiveErrors >= ERROR_LIMIT) {
+        const message = `Hand tracking stopped after ${ERROR_LIMIT} consecutive failures: ${diagnostics.lastError}. The mouse exhibit is unaffected.`;
+        this.stop();
+        this.options.onFatal?.(message);
+      }
       return;
     }
 
