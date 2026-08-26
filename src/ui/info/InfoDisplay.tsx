@@ -22,10 +22,16 @@ function formatDensity(density: number | null, phase: string): string {
 export function InfoDisplay() {
   const [element, setElement] = useState<ElementRecord | null>(null);
 
-  useExhibitEventBus((event) => {
+  const bus = useExhibitEventBus((event) => {
     if (event.type !== "elementSelected") return;
     setElement(getElement(event.atomicNumber) ?? null);
   });
+
+  // Ask the table what is currently selected, so a reload does not strand this
+  // display in its attract state until someone touches the table again.
+  useEffect(() => {
+    bus.publish({ type: "requestState" });
+  }, [bus]);
 
   const accent = element ? getCategoryColor(element.category) : "#d9b654";
 

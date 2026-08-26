@@ -59,3 +59,17 @@ describe("BrowserEventBus", () => {
     bus.close();
   });
 });
+
+describe("state request", () => {
+  it("accepts a bare request and rejects lookalikes", () => {
+    expect(parseExhibitEvent({ type: "requestState" })).toEqual({ type: "requestState" });
+    expect(parseExhibitEvent({ type: "requeststate" })).toBeNull();
+    expect(parseExhibitEvent({ type: "" })).toBeNull();
+  });
+
+  it("carries no payload, so nothing can be spoofed through it", () => {
+    expect(parseExhibitEvent({ type: "requestState", atomicNumber: 999 })).toEqual({
+      type: "requestState",
+    });
+  });
+});

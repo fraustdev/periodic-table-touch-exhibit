@@ -49,7 +49,14 @@ export type LightsPulseEvent = {
   intensity: number;
 };
 
-export type ExhibitEvent = ElementSelectedEvent | LightsPulseEvent;
+/**
+ * Asks whoever owns the selection to re-announce it. A display that opens or
+ * reloads mid-session catches up immediately instead of sitting in its attract
+ * state until the next visitor touch.
+ */
+export type RequestStateEvent = { type: "requestState" };
+
+export type ExhibitEvent = ElementSelectedEvent | LightsPulseEvent | RequestStateEvent;
 
 export type LightCue = { category: ElementCategory; intensity: number };
 

@@ -92,8 +92,12 @@ Tune anything in `src/domain/config.ts`.
 ## Out of scope, on purpose
 
 Dwell selection, multi-hand input, nine-point calibration, event replay, state recovery for a
-display that reloads mid-session, WebSocket/MQTT transports, and real LED control. Each has a
-seam waiting for it; none is needed to prove the interaction.
+WebSocket/MQTT transports, and real LED control. Each has a seam waiting for it; none is needed to
+prove the interaction.
+
+A display that opens or reloads mid-session does recover: it broadcasts `requestState` and the
+table re-announces the current selection. That is a handshake, not an authoritative server — if no
+table is open, the display stays in its attract state, which is the correct thing to show.
 
 ## Regenerating the dataset
 

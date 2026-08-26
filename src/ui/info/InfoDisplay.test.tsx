@@ -52,6 +52,29 @@ describe("InfoDisplay", () => {
     expect(document.querySelector(".chip")!.textContent).toMatch(/noble gas/i);
   });
 
+  it("asks for the current selection when it opens", async () => {
+    // A display that reloads mid-session must not sit in attract state until
+    // the next visitor touch.
+    const seen: unknown[] = [];
+    const listener = new BrowserEventBus(EXHIBIT_CONFIG.channelName);
+    listener.subscribe((event) => seen.push(event));
+
+    await act(async () => {
+      render(<InfoDisplay />);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(seen).toContainEqual({ type: "requestState" });
+    listener.close();
+  });
+
+  it("renders the selection it receives in reply to that request", async () => {
+    render(<InfoDisplay />);
+    // The table answers a request by re-announcing what is selected.
+    await publish({ type: "elementSelected", atomicNumber: 26, timestamp: 5 });
+    expect(screen.getByText("Iron")).toBeInTheDocument();
+  });
+
   it("ignores malformed cross-window messages", async () => {
     render(<InfoDisplay />);
     await publishSelection(6);

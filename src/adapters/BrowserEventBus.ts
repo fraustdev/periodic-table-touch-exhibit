@@ -22,6 +22,8 @@ export function parseExhibitEvent(value: unknown): ExhibitEvent | null {
     };
   }
 
+  if (candidate.type === "requestState") return { type: "requestState" };
+
   if (candidate.type === "lightsPulse") {
     if (!isCategory(candidate.category)) return null;
     const { intensity } = candidate;

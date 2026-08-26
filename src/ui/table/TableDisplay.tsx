@@ -34,7 +34,7 @@ import {
 import { reduceDwell, type DwellState } from "../../domain/calibrationDwell";
 import { CATEGORY_ORDER, getCategoryColor, getCategoryLabel } from "../../policy/categoryColors";
 import { getElement } from "../../data/elements";
-import type { Point } from "../../domain/types";
+import type { ExhibitEvent, Point } from "../../domain/types";
 
 type CalibrationRun = { step: number; captured: Point[]; progress: number };
 
@@ -69,12 +69,24 @@ export function TableDisplay() {
   const [run, setRun] = useState<CalibrationRun | null>(null);
   const [handHasSelected, setHandHasSelected] = useState(false);
 
-  const bus = useExhibitEventBus(() => {
-    // The table is the authority here; it does not act on its own broadcasts.
-  });
-
   const interactionRef = useRef(interaction);
   interactionRef.current = interaction;
+
+  const busRef = useRef<{ publish: (event: ExhibitEvent) => void } | null>(null);
+
+  const bus = useExhibitEventBus((event) => {
+    // The table owns the selection, so it answers state requests from a display
+    // that has just opened or reloaded. It ignores its own selection echoes.
+    if (event.type !== "requestState") return;
+    const selected = interactionRef.current.selected;
+    if (selected === null) return;
+    busRef.current?.publish({
+      type: "elementSelected",
+      atomicNumber: selected,
+      timestamp: performance.now(),
+    });
+  });
+  busRef.current = bus;
 
   /** The one path from a pointer sample to exhibit state and events. */
   const handleSample = useCallback(
