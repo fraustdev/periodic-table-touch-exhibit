@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { CameraDevice } from "../../adapters/camera";
-import type { HandFrame } from "../../adapters/HandInteractionSource";
+import { STAGE_LABELS, type HandFrame } from "../../adapters/HandInteractionSource";
 import { EXHIBIT_CONFIG } from "../../domain/config";
 
 export type HandStatus =
@@ -104,6 +104,12 @@ export function SetupDrawer({
       </p>
 
       {status.kind === "error" && <div className="notice">{status.message}</div>}
+      {frame && frame.diagnostics.detectErrors > 0 && frame.diagnostics.lastError && (
+        <div className="notice">
+          <strong>Model call failed {frame.diagnostics.detectErrors}×.</strong>{" "}
+          {frame.diagnostics.lastError}
+        </div>
+      )}
       {status.kind === "ready" && !calibrated && (
         <div className="notice">
           Hand tracking is running but the table geometry is unknown. Calibrate the four corners to
@@ -176,6 +182,8 @@ export function SetupDrawer({
         <dd>{status.kind === "ready" ? "Mouse + hand" : "Mouse"}</dd>
         <dt>Calibration</dt>
         <dd>{calibrated ? "Valid" : "None"}</dd>
+        <dt>Pipeline</dt>
+        <dd>{frame ? STAGE_LABELS[frame.diagnostics.stage] : "Not started"}</dd>
         <dt>Tracking</dt>
         <dd>{frame?.landmarks ? `${Math.round((frame.confidence ?? 0) * 100)}%` : "No hand"}</dd>
         <dt>Pinch</dt>

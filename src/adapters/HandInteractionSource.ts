@@ -21,8 +21,36 @@ export type HandFrame = {
 
 export type Delegate = "GPU" | "CPU";
 
+/**
+ * Where the last tick stopped. Every early return in detect() names itself, so
+ * a stalled pipeline reports its own cause instead of looking like "no hand".
+ */
+export type PipelineStage =
+  | "starting"
+  | "no-model"
+  | "video-not-ready"
+  | "frame-not-advanced"
+  | "detect-threw"
+  | "no-hand-found"
+  | "confidence-too-low"
+  | "awaiting-calibration"
+  | "tracking";
+
+export const STAGE_LABELS: Record<PipelineStage, string> = {
+  starting: "Starting up",
+  "no-model": "Model not loaded",
+  "video-not-ready": "Camera has no frames yet",
+  "frame-not-advanced": "Waiting for the next camera frame",
+  "detect-threw": "Model call failed",
+  "no-hand-found": "Model ran, found no hand",
+  "confidence-too-low": "Hand found, confidence below threshold",
+  "awaiting-calibration": "Tracking — needs corner calibration",
+  tracking: "Tracking",
+};
+
 /** Enough to tell where the pipeline stopped, without opening a debugger. */
 export type HandDiagnostics = {
+  stage: PipelineStage;
   /** Frames the render loop has attempted. */
   ticks: number;
   /** Frames actually handed to the model. */
@@ -60,6 +88,7 @@ export class HandInteractionSource implements InteractionSource {
   private lastFrameAt = 0;
   private fps = 0;
   private diagnostics: HandDiagnostics = {
+    stage: "starting",
     ticks: 0,
     detections: 0,
     videoReadyState: 0,
@@ -133,7 +162,8 @@ export class HandInteractionSource implements InteractionSource {
     diagnostics.trackState = track ? `${track.readyState}${track.enabled ? "" : " (disabled)"}` : "none";
 
     /** Always report, even on an early return, so the readout proves liveness. */
-    const report = (over: Partial<HandFrame> = {}) =>
+    const report = (stage: PipelineStage, over: Partial<HandFrame> = {}) => {
+      diagnostics.stage = stage;
       onFrame?.({
         cameraPoint: null,
         pinch: Number.NaN,
@@ -144,6 +174,7 @@ export class HandInteractionSource implements InteractionSource {
         diagnostics: { ...diagnostics },
         ...over,
       });
+    };
 
     const clear = (confidence: number) => {
       this.engaged = false;
@@ -152,19 +183,19 @@ export class HandInteractionSource implements InteractionSource {
     };
 
     if (!this.landmarker) {
-      report();
+      report("no-model");
       return;
     }
 
     if (video.readyState < 2) {
-      report();
+      report("video-not-ready");
       return;
     }
 
     // MediaPipe rejects a repeated timestamp, so skip frames the camera has not
     // advanced. A frozen currentTime means no frames are arriving at all.
     if (video.currentTime === this.lastVideoTime) {
-      report();
+      report("frame-not-advanced");
       return;
     }
     this.lastVideoTime = video.currentTime;
@@ -183,7 +214,7 @@ export class HandInteractionSource implements InteractionSource {
     } catch (error) {
       diagnostics.detectErrors += 1;
       diagnostics.lastError = error instanceof Error ? error.message : String(error);
-      report();
+      report("detect-threw");
       return;
     }
 
@@ -192,22 +223,27 @@ export class HandInteractionSource implements InteractionSource {
 
     if (!landmarks) {
       diagnostics.emptyResults += 1;
-      report({ confidence });
+      report("no-hand-found", { confidence });
       clear(confidence);
       return;
     }
 
     if (confidence < EXHIBIT_CONFIG.minConfidence) {
-      report({ confidence, landmarks });
+      report("confidence-too-low", { confidence, landmarks });
       clear(confidence);
       return;
     }
 
     const cameraPoint = fingertipPoint(landmarks);
     const pinch = pinchRatio(landmarks);
-    report({ cameraPoint, pinch, confidence, landmarks });
-
     const transform = getTransform();
+    report(transform ? "tracking" : "awaiting-calibration", {
+      cameraPoint,
+      pinch,
+      confidence,
+      landmarks,
+    });
+
     if (!cameraPoint || !transform) {
       // Tracking works but the table geometry is unknown: stay out of the way.
       listener({ point: null, engaged: false, confidence, source: "hand" });
