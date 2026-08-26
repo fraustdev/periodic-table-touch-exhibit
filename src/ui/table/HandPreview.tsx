@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { HandFrame } from "../../adapters/HandInteractionSource";
 
 /** MediaPipe's 21-landmark hand skeleton. */
@@ -27,10 +27,20 @@ type Props = {
  * drawer and the calibration overlay — during calibration the visitor needs to
  * see where their hand actually is, or they are aiming blind.
  */
+/** Landmark coordinates are normalized to the full camera frame. */
+const CANVAS_WIDTH = 480;
+
 export function HandPreview({ stream, frame, videoRef, className }: Props) {
   const localRef = useRef<HTMLVideoElement>(null);
   const ref = videoRef ?? localRef;
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  /**
+   * The preview box, the canvas buffer, and the camera frame must all share one
+   * aspect ratio. Anything else means object-fit crops the video while the
+   * overlay keeps drawing across the whole frame, and the skeleton lands offset
+   * from the hand it is tracking.
+   */
+  const [aspect, setAspect] = useState(16 / 9);
 
   useEffect(() => {
     const video = ref.current;
@@ -43,6 +53,23 @@ export function HandPreview({ stream, frame, videoRef, className }: Props) {
       });
     }
   }, [stream, ref]);
+
+  useEffect(() => {
+    const video = ref.current;
+    if (!video) return;
+    const sync = () => {
+      if (video.videoWidth > 0 && video.videoHeight > 0) {
+        setAspect(video.videoWidth / video.videoHeight);
+      }
+    };
+    sync();
+    video.addEventListener("loadedmetadata", sync);
+    video.addEventListener("resize", sync);
+    return () => {
+      video.removeEventListener("loadedmetadata", sync);
+      video.removeEventListener("resize", sync);
+    };
+  }, [ref, stream]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -88,9 +115,12 @@ export function HandPreview({ stream, frame, videoRef, className }: Props) {
   }, [frame]);
 
   return (
-    <div className={`camera-preview${className ? ` ${className}` : ""}`}>
+    <div
+      className={`camera-preview${className ? ` ${className}` : ""}`}
+      style={{ aspectRatio: String(aspect) }}
+    >
       <video ref={ref} playsInline muted />
-      <canvas ref={canvasRef} width={480} height={360} />
+      <canvas ref={canvasRef} width={CANVAS_WIDTH} height={Math.round(CANVAS_WIDTH / aspect)} />
       {!stream && <span className="camera-preview__empty eyebrow">Camera off</span>}
     </div>
   );

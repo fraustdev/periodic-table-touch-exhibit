@@ -640,7 +640,7 @@ button {
   flex: none;
   width: 100%;
   min-height: 150px;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 16 / 9;
   border: var(--rule-strong);
   border-radius: 2px;
   overflow: hidden;
