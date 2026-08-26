@@ -637,7 +637,9 @@ button {
 
 .camera-preview {
   position: relative;
+  flex: none;
   width: 100%;
+  min-height: 150px;
   aspect-ratio: 4 / 3;
   border: var(--rule-strong);
   border-radius: 2px;
@@ -656,7 +658,7 @@ button {
 .calibration__preview {
   position: absolute;
   bottom: 8%;
-  width: min(300px, 26vw);
+  width: clamp(200px, 26vw, 320px);
   z-index: 2;
   box-shadow: 0 24px 60px -20px rgb(0 0 0 / 0.8);
 }
