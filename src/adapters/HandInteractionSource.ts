@@ -83,7 +83,16 @@ export const STAGE_LABELS: Record<PipelineStage, string> = {
 
 /** Enough to tell where the pipeline stopped, without opening a debugger. */
 export type HandDiagnostics = {
+  /** The most recent tick's stage. Flickers at animation-frame rate. */
   stage: PipelineStage;
+  /**
+   * The last stage that actually reached the model. "frame-not-advanced" is a
+   * normal idle tick, not a stop, so it never overwrites this — which is what
+   * makes the value readable by a human.
+   */
+  activeStage: PipelineStage;
+  /** performance.now() of the last successful model call, or 0. */
+  lastDetectionAt: number;
   /** Frames the render loop has attempted. */
   ticks: number;
   /** Frames actually handed to the model. */
@@ -129,6 +138,8 @@ export class HandInteractionSource implements InteractionSource {
   private fps = 0;
   private diagnostics: HandDiagnostics = {
     stage: "starting",
+    activeStage: "starting",
+    lastDetectionAt: 0,
     ticks: 0,
     detections: 0,
     videoReadyState: 0,
@@ -208,6 +219,7 @@ export class HandInteractionSource implements InteractionSource {
     /** Always report, even on an early return, so the readout proves liveness. */
     const report = (stage: PipelineStage, over: Partial<HandFrame> = {}) => {
       diagnostics.stage = stage;
+      if (stage !== "frame-not-advanced") diagnostics.activeStage = stage;
       onFrame?.({
         cameraPoint: null,
         pinch: Number.NaN,
@@ -256,6 +268,7 @@ export class HandInteractionSource implements InteractionSource {
       result = this.landmarker.detectForVideo(video, now);
       diagnostics.detections += 1;
       diagnostics.consecutiveErrors = 0;
+      diagnostics.lastDetectionAt = now;
     } catch (error) {
       diagnostics.detectErrors += 1;
       diagnostics.consecutiveErrors += 1;

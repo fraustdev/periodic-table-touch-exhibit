@@ -32,6 +32,39 @@ type Props = {
  * Operator-only surface. Camera video and landmarks live in here and nowhere
  * else — a visitor must never see a computer-vision debug view.
  */
+/**
+ * A single readable answer to "is hand tracking working?". Built from the last
+ * stage that reached the model, never from the instantaneous tick, which
+ * alternates with idle frames too fast to read.
+ */
+function describeVerdict(frame: HandFrame | null): { text: string; tone: "good" | "warn" | "bad" } {
+  if (!frame) return { text: "Not started", tone: "warn" };
+  const { activeStage, detectErrors, consecutiveErrors, lastDetectionAt } = frame.diagnostics;
+
+  if (consecutiveErrors > 0 || activeStage === "detect-threw") {
+    return { text: `Model is failing (${detectErrors} errors)`, tone: "bad" };
+  }
+  if (lastDetectionAt > 0 && performance.now() - lastDetectionAt > 1_500) {
+    return { text: "Camera has stalled — no new frames", tone: "bad" };
+  }
+  switch (activeStage) {
+    case "tracking":
+      return { text: "Working — tracking your hand", tone: "good" };
+    case "awaiting-calibration":
+      return { text: "Working — calibrate the corners to select", tone: "warn" };
+    case "no-hand-found":
+      return { text: "Working — no hand in view", tone: "warn" };
+    case "confidence-too-low":
+      return { text: "Hand seen, but too faint to trust", tone: "warn" };
+    case "video-not-ready":
+      return { text: "Camera has not produced a frame yet", tone: "bad" };
+    case "no-model":
+      return { text: "Model is not loaded", tone: "bad" };
+    default:
+      return { text: "Starting up", tone: "warn" };
+  }
+}
+
 export function SetupDrawer({
   open,
   onClose,
@@ -50,6 +83,7 @@ export function SetupDrawer({
   videoRef,
 }: Props) {
   const pinch = frame && Number.isFinite(frame.pinch) ? frame.pinch : null;
+  const verdict = describeVerdict(frame);
 
   return (
     <aside className={`drawer${open ? " drawer--open" : ""}`} aria-hidden={!open} aria-label="Exhibit setup">
@@ -77,6 +111,13 @@ export function SetupDrawer({
           Hand tracking is running but the table geometry is unknown. Calibrate the four corners to
           enable pinch selection.
         </div>
+      )}
+
+      {frame && (
+        <p className={`verdict verdict--${verdict.tone}`}>
+          <span className="verdict__dot" />
+          {verdict.text}
+        </p>
       )}
 
       <div className="drawer__field">
@@ -147,7 +188,7 @@ export function SetupDrawer({
         <dt>Calibration</dt>
         <dd>{calibrated ? "Valid" : "None"}</dd>
         <dt>Pipeline</dt>
-        <dd>{frame ? STAGE_LABELS[frame.diagnostics.stage] : "Not started"}</dd>
+        <dd>{frame ? STAGE_LABELS[frame.diagnostics.activeStage] : "Not started"}</dd>
         <dt>Tracking</dt>
         <dd>{frame?.landmarks ? `${Math.round((frame.confidence ?? 0) * 100)}%` : "No hand"}</dd>
         <dt>Pinch</dt>
