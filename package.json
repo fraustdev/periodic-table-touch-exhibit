@@ -8,7 +8,9 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "data:build": "node scripts/build-elements.mjs"
+    "data:build": "node scripts/build-elements.mjs",
+    "assets:vendor": "node scripts/vendor-mediapipe.mjs",
+    "postinstall": "node scripts/vendor-mediapipe.mjs"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^1.0.1",
