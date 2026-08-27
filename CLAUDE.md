@@ -152,6 +152,14 @@ suite worth running.
   is set there deliberately.
 - Prettier is enforced in CI. Run `npm run format` before committing.
 
+## Project skills
+
+Two skills ship with the repo and should be used rather than reinvented:
+
+- **`/verify-exhibit`** before claiming anything works, and before any demo.
+- **`/add-trend`** when adding or changing a property overlay. It encodes the coverage floor and the
+  linear-versus-log judgement.
+
 ## Decisions already made
 
 `docs/decisions.md` records the real decisions and what would change our mind. **Read it before

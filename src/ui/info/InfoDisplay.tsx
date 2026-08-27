@@ -3,6 +3,7 @@ import { getElement } from "../../data/elements";
 import { getCategoryColor, getCategoryLabel } from "../../policy/categoryColors";
 import { useExhibitEventBus } from "../../hooks/useExhibitEventBus";
 import type { ElementRecord } from "../../domain/types";
+import type { LandmarkProps } from "../landmark";
 
 /** Pauling electronegativity runs from cesium at 0.79 to fluorine at 3.98. */
 const EN_MIN = 0.79;
@@ -19,7 +20,7 @@ function formatDensity(density: number | null, phase: string): string {
   return phase === "Gas" ? `${density.toFixed(3)} g/L` : `${density} g/cm³`;
 }
 
-export function InfoDisplay() {
+export function InfoDisplay({ landmark: Landmark = "main" }: LandmarkProps = {}) {
   const [element, setElement] = useState<ElementRecord | null>(null);
 
   const bus = useExhibitEventBus((event) => {
@@ -42,7 +43,7 @@ export function InfoDisplay() {
   }, [element]);
 
   return (
-    <main
+    <Landmark
       aria-label="Element information display"
       className="label"
       style={{ ["--accent" as string]: accent }}
@@ -156,6 +157,6 @@ export function InfoDisplay() {
           </footer>
         </>
       )}
-    </main>
+    </Landmark>
   );
 }

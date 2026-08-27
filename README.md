@@ -49,6 +49,7 @@ else below is reference.
 | [`docs/hardware-translation.md`](docs/hardware-translation.md) | What each part becomes on the real installation.                 |
 | [`docs/demo-runbook.md`](docs/demo-runbook.md)                 | Presenting it live. For the operator, not a contributor.         |
 | [`docs/how-this-was-built.md`](docs/how-this-was-built.md)     | The process, including the wrong turns.                          |
+| [`.claude/`](.claude)                                          | Project Claude Code config: permissions and two project skills.  |
 | [`docs/design-spec.md`](docs/design-spec.md)                   | The original design specification.                               |
 | [`docs/implementation-plan.md`](docs/implementation-plan.md)   | The task-by-task build plan that was executed.                   |
 

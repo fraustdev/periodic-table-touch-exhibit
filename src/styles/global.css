@@ -1468,3 +1468,59 @@ button {
     }
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Paired route — both displays in one window.
+
+   Each panel is its own containing block so the displays keep sizing against
+   their own box, exactly as they do when each owns a monitor. The seam is a
+   visible gap rather than a border: on the real installation these are two
+   physical panels with a bezel between them, and the single-screen view should
+   read that way too.
+   --------------------------------------------------------------------------- */
+.pair {
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 0.46fr);
+  background: var(--ink-000);
+}
+
+.pair__panel {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.pair__seam {
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in oklab, var(--bone-100) 12%, transparent) 18%,
+    color-mix(in oklab, var(--bone-100) 12%, transparent) 82%,
+    transparent
+  );
+}
+
+/* The interpretation panel is a column here, not a full display, so its
+   editorial measure has to give. */
+.pair__panel--info .label {
+  padding-inline: clamp(1rem, 2vw, 1.75rem);
+}
+
+@media (max-width: 1180px) {
+  .pair {
+    grid-template-columns: none;
+    grid-template-rows: minmax(0, 1fr) 1px minmax(0, 0.42fr);
+  }
+
+  .pair__seam {
+    background: linear-gradient(
+      to right,
+      transparent,
+      color-mix(in oklab, var(--bone-100) 12%, transparent) 18%,
+      color-mix(in oklab, var(--bone-100) 12%, transparent) 82%,
+      transparent
+    );
+  }
+}

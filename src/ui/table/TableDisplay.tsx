@@ -29,8 +29,9 @@ import {
 } from "../../policy/trends";
 import { getElement } from "../../data/elements";
 import type { ElementRecord, Point, PointerSample } from "../../domain/types";
+import type { LandmarkProps } from "../landmark";
 
-export function TableDisplay() {
+export function TableDisplay({ landmark: Landmark = "main" }: LandmarkProps = {}) {
   const surfaceRef = useRef<HTMLDivElement>(null);
 
   const [interaction, setInteraction] = useState<InteractionState>(initialInteractionState);
@@ -195,7 +196,7 @@ export function TableDisplay() {
   const surfaceBox = surfaceRef.current?.getBoundingClientRect();
 
   return (
-    <main
+    <Landmark
       aria-label="Periodic table display"
       className="stage"
       style={{ ["--accent" as string]: accent }}
@@ -371,6 +372,6 @@ export function TableDisplay() {
           )
         }
       />
-    </main>
+    </Landmark>
   );
 }

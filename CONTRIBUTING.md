@@ -89,6 +89,20 @@ check_ is committed rather than living in someone's head.
 
 `HEADED=1 npm run verify:browser` runs it visibly if you want to watch.
 
+## Claude Code tooling in this repo
+
+If you work here with Claude Code, the project ships its own configuration:
+
+- **`.claude/settings.json`** — a permission allowlist for the routine commands, so `npm test` and
+  `npm run verify` do not prompt. Deliberately conservative: nothing that executes arbitrary code is
+  allowlisted.
+- **`/verify-exhibit`** — runs the unit and browser suites and interprets failures, with a table
+  mapping each possible failure to the file that causes it.
+- **`/add-trend`** — walks adding a property overlay, including the coverage floor and the
+  linear-versus-log decision, so a new trend cannot quietly be a bad one.
+
+`CLAUDE.md` at the root is loaded automatically and carries the invariants.
+
 ## Making a change
 
 1. Check `docs/decisions.md` first. Several odd-looking choices are deliberate and the reasoning is
