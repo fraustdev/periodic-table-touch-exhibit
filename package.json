@@ -12,7 +12,8 @@
     "assets:vendor": "node scripts/vendor-mediapipe.mjs",
     "postinstall": "node scripts/vendor-mediapipe.mjs",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "leds:demo": "node scripts/led-frame-demo.ts"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^1.0.1",
