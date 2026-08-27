@@ -26,8 +26,15 @@ of the light layer's fidelity would be waste.
 
 ## 2. Three seams: input, transport, light output
 
-**Decision.** Hold three interfaces narrow — `InteractionSource`, `ExhibitEventBus`, `LightOutput` —
-and let nothing hardware-specific cross them.
+**Decision.** Hold three seams narrow — input, transport, and light output — and let nothing
+hardware-specific cross them.
+
+Input and transport are expressed as interfaces (`InteractionSource`, `ExhibitEventBus`). **Light
+output is a convention rather than an interface**, and deliberately so: the pulse origin and
+per-pixel lag are pure functions of arc length, and only the DOM rendering is browser-specific. A
+`LightOutput` interface was declared early and deleted once it became clear nothing implemented it
+and nothing would until the serial sink exists. An interface with zero implementations documents an
+intention as though it were a fact.
 
 **Why.** These are the three things certain to change. Everything else (rules, data, geometry,
 colour policy, effects) is device-independent and shouldn't have to move.

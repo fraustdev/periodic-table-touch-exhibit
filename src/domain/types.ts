@@ -82,8 +82,3 @@ export interface ExhibitEventBus {
   publish(event: ExhibitEvent): void;
   subscribe(listener: (event: ExhibitEvent) => void): () => void;
 }
-
-export interface LightOutput {
-  pulse(cue: LightCue): void;
-  reset(): void;
-}

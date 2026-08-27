@@ -16,13 +16,19 @@ web app are often wrong here, and vice versa.
 
 Everything is arranged so three things can be replaced without touching anything else:
 
-| Seam         | Interface           | Now                    | Later                              |
-| ------------ | ------------------- | ---------------------- | ---------------------------------- |
-| Input        | `InteractionSource` | mouse, MediaPipe hand  | native touch                       |
-| Transport    | `ExhibitEventBus`   | `BroadcastChannel`     | WebSocket to a local authority     |
-| Light output | `LightOutput`       | 120 virtual DOM pixels | serial frames to an LED controller |
+| Seam         | Interface            | Now                    | Later                              |
+| ------------ | -------------------- | ---------------------- | ---------------------------------- |
+| Input        | `InteractionSource`  | mouse, MediaPipe hand  | native touch                       |
+| Transport    | `ExhibitEventBus`    | `BroadcastChannel`     | WebSocket to a local authority     |
+| Light output | `Pulse` + arc length | 120 virtual DOM pixels | serial frames to an LED controller |
 
 **If a change makes one of these seams leakier, it is the wrong change**, even if it is shorter.
+
+Note that input and transport are expressed as interfaces, but **the light seam is not**. It is a
+convention: `perimeterOrigin()` and the per-pixel lag calculation are pure and sink-independent, and
+only the DOM rendering in `PerimeterLights` is browser-specific. There is one consumer, so there is
+no interface yet — a `LightOutput` interface was declared early, implemented by nothing, and
+deleted. Add one when the serial sink arrives and there are two.
 
 ## Invariants — do not break these
 
