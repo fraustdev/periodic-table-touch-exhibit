@@ -34,6 +34,8 @@ Open `/table`, then use **Setup → Open info display** and drag that window to 
 | [`CLAUDE.md`](CLAUDE.md)                                       | Invariants and conventions, written for AI collaborators.        |
 | [`docs/decisions.md`](docs/decisions.md)                       | Why things are the way they are, and what would change our mind. |
 | [`docs/hardware-translation.md`](docs/hardware-translation.md) | What each part becomes on the real installation.                 |
+| [`docs/demo-runbook.md`](docs/demo-runbook.md)                 | Running this live: sequence, talking points, recovery.           |
+| [`docs/how-this-was-built.md`](docs/how-this-was-built.md)     | The process, including the wrong turns.                          |
 | [`docs/design-spec.md`](docs/design-spec.md)                   | The original design specification.                               |
 | [`docs/implementation-plan.md`](docs/implementation-plan.md)   | The task-by-task build plan that was executed.                   |
 
