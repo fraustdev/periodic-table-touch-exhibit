@@ -17,10 +17,16 @@ grid's empty quadrant repeats the current element, because a finger occludes the
 _The second display, as an editorial exhibit label. Every scalar sits on a named scale rather than
 appearing as a bare number._
 
+![The table coloured by melting point](docs/images/trend-melting.jpg)
+
+_A trend overlay. Recolouring by melting point makes the refractory metals appear as a bright ridge
+through the middle of the d-block — the layout stops being a convention and becomes visible physics.
+Elements with no measured value stay grey rather than being given an invented one._
+
 ```bash
 npm install
 npm run dev          # http://localhost:5173/table  and  /info
-npm test             # 73 tests
+npm test             # 131 tests
 npm run build
 ```
 
@@ -80,15 +86,22 @@ src/domain/      pure rules — no browser, no React
   elementLayout.ts canonical 18-column grid + hit test (renderer reads the same numbers)
   interaction.ts   idle → hover → armed → confirmed → cooldown state machine
   calibration.ts   four-point homography, camera space → table space
+  lightFrame.ts    LED output: governor, gamma, dither, COBS + CRC16, swappable sink
 src/data/        118 elements, generated and committed
-src/policy/      category → colour, shared by both displays and the lights
-src/adapters/    browser edges: pointer, MediaPipe, camera, event bus
+src/policy/      category → colour; trend overlays and their ramp
+src/hooks/       camera lifecycle, calibration flow, event bus
+src/adapters/    browser edges: mouse, touch, MediaPipe, camera, event bus
 src/ui/          React rendering only
 ```
 
-`reduceInteraction` is the single path from a pointer sample to an exhibit event. The mouse is not
-a React `onClick` shortcut — it goes through the same reducer as the hand, so the two inputs
-cannot drift apart. There is a test asserting they emit byte-identical event sequences.
+`reduceInteraction` is the single path from a pointer sample to an exhibit event. The mouse is not a
+React `onClick` shortcut — all three drivers go through the same reducer, so they cannot drift apart.
+A test asserts they emit identical event sequences: same selections, same light cues, same order.
+
+The drivers are genuinely different where the hardware is. Touch has no hover, because a finger
+leaves nothing behind on release; contact is itself the press; and a panel reports every contact it
+sees, so oversized ones are rejected as palms. A separate test pins the one difference they are
+allowed to have.
 
 ### Deliberate constraints
 
@@ -101,6 +114,42 @@ cannot drift apart. There is a test asserting they emit byte-identical event seq
   finger occludes the cell it is pressing and everything just below it.
 - **Camera failure is not exhibit failure.** Denied permission, missing camera, model load failure,
   and lost tracking all degrade to a fully working mouse exhibit.
+
+## Trend overlays
+
+The table can be recoloured by a measured property — melting point, density, or electronegativity —
+which turns the layout into visible physics. Press `t` to cycle, or use the switcher in the footer.
+
+- **Density is logarithmic.** It spans three orders of magnitude, so a linear ramp would render
+  everything except the heavy metals identically.
+- **Unmeasured is shown as unmeasured.** Eleven elements have no measured melting point; they render
+  grey rather than being given a fabricated value.
+- **Colour is never the only channel.** The focus card prints the value with units and the legend
+  becomes a labelled scale with the range's real endpoints.
+- **Text contrast is measured, not assumed.** The ink is chosen by computing contrast against both a
+  light and a dark option and taking the better one; a test walks the whole ramp.
+
+Adding a trend is one entry in `TRENDS` in `src/policy/trends.ts`.
+
+## The LED output path
+
+`src/domain/lightFrame.ts` is the pipeline that will drive the physical strip:
+
+```
+linear float → governor → gamma encode → temporal dither → channel order
+             → COBS frame + CRC16 → sink
+```
+
+It runs against a `NullSink`, so it is complete and tested before any hardware exists. Inspect the
+real wire bytes with:
+
+```bash
+npm run leds:demo
+```
+
+That prints the encoded frame, proves a flipped bit is rejected, shows the dither series averaging a
+level 8 bits cannot hold, and tabulates the link budget — confirming in numbers that 230 RGBW pixels
+at 60 fps is 554 kbps, which a 115200 UART cannot carry.
 
 ## Hand tracking
 

@@ -44,8 +44,10 @@ Read these four files, in order. Together they're under 400 lines and they conta
    of it: 108 lines, no browser, no React.
 3. **`src/domain/elementLayout.ts`** — the periodic table's geometry and its hit test. The renderer
    reads the same numbers, so a pointer can never disagree with what a visitor sees.
-4. **`src/ui/table/TableDisplay.tsx`** — where it all gets wired together. The largest file, and the
-   one to be most careful in.
+4. **`src/ui/table/TableDisplay.tsx`** — where it all gets wired together. The composition root.
+
+Then, if you are working on the hardware path, `src/domain/lightFrame.ts` — the LED output pipeline,
+which runs against a null sink and can be inspected with `npm run leds:demo`.
 
 ## How the pieces relate
 
@@ -54,22 +56,23 @@ Read these four files, in order. Together they're under 400 lines and they conta
 ┌─────────────────┐        ┌──────────────────┐        ┌────────────────────┐
 │ MouseSource     │        │                  │        │ table display      │
 │ HandSource      │ ─────► │ reduceInteraction│ ─────► │ info display       │
-│ (TouchSource)   │ Pointer│  + hit test      │ events │ perimeter lights   │
+│ TouchSource     │ Pointer│  + hit test      │ events │ perimeter lights   │
 └─────────────────┘ Sample └──────────────────┘        └────────────────────┘
                                                     via validated event bus
 ```
 
-Both inputs produce the same `PointerSample`. One reducer turns samples into events. Every surface
-is just a consumer of those events. Adding a fourth surface is subscribing to the bus.
+All three drivers produce the same `PointerSample`. One reducer turns samples into events. Every
+surface is just a consumer of those events. Adding a fourth surface is subscribing to the bus.
 
 ## Testing philosophy
 
 The rules live in `domain/` precisely so they can be tested without a browser. **Prefer a pure test
 over a component test.** Component tests cover rendering and event wiring only.
 
-There's one test worth knowing about: mouse and hand input are asserted to emit **byte-identical
-event sequences**. If you add an input device, add it to that test. If they diverge, the two inputs
-have started to drift and the touch swap is no longer safe.
+There's one test worth knowing about: mouse, hand, and touch input are asserted to emit **identical
+event sequences** — same selections, same light cues, same order. Timestamps are excluded, because
+the drivers reach a press at different points in their own sample streams. If you add an input
+device, add it to that test. If they diverge, the drivers have started to drift.
 
 **For anything visual or geometric, verify in a real browser.** Unit tests can't tell you an overlay
 is misaligned with its video. That bug shipped here, and was only caught by measuring both elements'
@@ -87,13 +90,20 @@ bounding boxes in a live page.
 
 ## Where the risk is
 
-`src/ui/table/TableDisplay.tsx` is around 575 lines and carries five jobs: React state, camera
-lifecycle, calibration orchestration, keyboard handling, and rendering. It's also the least tested
-file in the repo.
+`src/ui/table/TableDisplay.tsx` is the largest file at around 370 lines, and it is the composition
+root: it wires the drivers, the two hooks, and the three surfaces together. It is also the least
+directly tested file, because almost everything it coordinates is tested where that logic lives.
 
-It's the known refactor candidate — extracting `useHandTracking` and `useCalibrationRun` would take
-it to roughly 250 lines and make both testable. If you're looking for a first contribution that the
-whole team benefits from, that's the one.
+It used to be 575 lines carrying five jobs. The camera lifecycle now lives in
+`src/hooks/useHandTracking.ts` and the calibration flow in `src/hooks/useCalibrationRun.ts`.
+
+**If you are adding to this file, ask first whether the logic belongs in a hook or in `domain/`.**
+That is how it stayed manageable, and it is the easiest thing to undo by accident.
+
+Two hooks, one wrinkle worth knowing: they are mutually dependent. Calibration maps camera space to
+table space and is keyed to the camera's label; the camera needs calibration's transform on every
+frame. That cycle is broken by two explicit refs in `TableDisplay`, each commented with why it is
+there. Do not try to remove them without replacing the cycle with something better.
 
 ## Deliberately out of scope
 

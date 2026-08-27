@@ -62,6 +62,12 @@ deleted. Add one when the serial sink arrives and there are two.
    failure, and lost tracking must all degrade to a fully working mouse exhibit.
 8. **Every gesture threshold lives in `src/domain/config.ts`.** Never inline a magic number for
    timing, distance, or confidence.
+9. **The light governor is not exported.** It runs inside `encodeFrame` so an effect author cannot
+   obtain a sink and bypass the power ceiling or the visibility floor. A test asserts it is
+   unreachable. Do not export it for convenience.
+10. **A trend must render unmeasured values as unmeasured.** Never substitute a midpoint or a zero
+    for a property an element does not have — that the superheavies have no measured melting point
+    is a fact worth showing.
 
 ## Layout
 
@@ -73,8 +79,11 @@ src/domain/      pure rules — no browser, no React, no imports from ui/ or ada
   interaction.ts   idle → hover → armed → confirmed → cooldown. All the rules.
   calibration.ts   four-point homography, camera space → table space
   calibrationDwell.ts  hold-to-capture reducer
+  lightFrame.ts    LED output: governor, gamma, dither, COBS + CRC16, sink
 src/data/        118 elements, generated and committed
-src/policy/      category → colour and label, shared by both displays and the lights
+src/policy/      category → colour and label; trend overlays and their ramp
+src/hooks/       useHandTracking (camera lifecycle), useCalibrationRun (dwell,
+                 validation, confirmation), useExhibitEventBus
 src/adapters/    browser edges: pointer, MediaPipe, camera, event bus
 src/ui/          React rendering only
 ```
@@ -91,6 +100,10 @@ Dependency direction is one-way: `ui → adapters → domain`. **`domain/` impor
 | Change the periodic table geometry | `src/domain/elementLayout.ts` — the renderer follows automatically |
 | Change category colours            | `src/policy/categoryColors.ts`                                     |
 | Add a lighting effect              | `src/ui/table/PerimeterLights.tsx`, addressed by arc length        |
+| Add a trend overlay                | `src/policy/trends.ts` — add to `TRENDS`, nothing else changes     |
+| Change the LED wire format         | `src/domain/lightFrame.ts`; check `npm run leds:demo`              |
+| Touch the camera lifecycle         | `src/hooks/useHandTracking.ts`                                     |
+| Touch the calibration flow         | `src/hooks/useCalibrationRun.ts`                                   |
 | Add a new input device             | implement `InteractionSource` in `src/adapters/`                   |
 | Change selection rules             | `src/domain/interaction.ts`, and update its tests first            |
 

@@ -44,7 +44,24 @@ number.
 **4. Select neon, then uranium.** Different category, different accent colour across all three
 surfaces from one shared policy.
 
-**5. Now the hand.** Point and pinch. Say the important part out loud: **this is the shipping input,
+**5. Press `t`, or hit "Melting point" in the footer.** This is the moment to slow down.
+
+The whole table recolours by melting point. Point out the **bright ridge through the middle of the
+d-block** — those are the refractory metals, niobium through osmium, and they are physically the
+hardest things on the table to melt. Then the noble gases sitting dark at the right edge.
+
+Say what it means: _the layout stops being a convention you have to be taught and becomes something
+you can see._ The columns and rows encode valence electrons and shell filling, and this makes that
+structure visible as physics.
+
+Then press `t` again for density and note the scale is **logarithmic** — it spans three orders of
+magnitude, so a linear ramp would render everything except the heavy metals identically.
+
+If anyone looks at the grey cells: those are elements with **no measured value**. Eleven have no
+melting point on record, almost all synthetic superheavies. They are grey rather than given an
+invented number, because the gap is a real fact about the limits of measurement.
+
+**6. Now the hand.** Point and pinch. Say the important part out loud: **this is the shipping input,
 not a gimmick** — the installation is projected and gesture-driven, so this is the real interaction,
 being developed against a laptop webcam.
 
@@ -53,8 +70,29 @@ The only thing that leaves is a pointer sample in normalized surface space, whic
 is a genuine fallback rather than a separate code path, and why a touchscreen variant is one new
 file. There's a test asserting mouse and hand produce byte-identical event sequences.
 
-**6. Reload the info window while they watch.** It comes back with the current element. Small, and
+**7. Reload the info window while they watch.** It comes back with the current element. Small, and
 it's the difference between an exhibit and a demo.
+
+## If asked about the hardware path
+
+Two things you can show rather than describe:
+
+**The touch driver already exists.** `TouchInteractionSource` is implemented and mounted alongside
+the mouse. There is a test asserting mouse, hand, and touch produce identical selections and light
+cues. So "the seam works" is not a claim, it is a passing test — and it needed real thought, because
+touch has no hover, contact is itself the press, and a panel reports resting forearms as contacts.
+
+**The LED output path is written and inspectable.** Run it in front of them:
+
+```bash
+npm run leds:demo
+```
+
+It prints the actual bytes a controller would receive — GRB order, gamma-encoded, dithered, COBS
+framed with a CRC — proves a single flipped bit is rejected, shows the dither averaging a level 8
+bits cannot represent, and tabulates the link budget. That last table is the useful one: 230 RGBW
+pixels at 60 fps is 554 kbps, so a 115200 UART cannot carry it. Better to know that now than on a
+bench at midnight.
 
 ## If asked "how do you hand this off?"
 
@@ -74,8 +112,11 @@ Then `git log`. The commit messages carry the reasoning and, for fixes, the fail
 
 Say it plainly, it lands better than deflecting:
 
-- **`TableDisplay.tsx` is 575 lines doing five jobs** and is the least-tested file. It's named as the
-  known refactor candidate in `CONTRIBUTING.md`, with the specific extraction described.
+- **`TableDisplay.tsx` is still the biggest file at ~370 lines.** It was 575 doing five jobs; the
+  camera lifecycle and the calibration flow are now hooks. It is the composition root, and it is the
+  file most likely to accumulate again — `CONTRIBUTING.md` says so and says what to do instead.
+- **The transport still has to be replaced** with a local authoritative process before the LED build.
+  That is the one genuine piece of remaining work, and it is about half a day.
 - **Commit-on-press is a WCAG 2.5.2 Level A conformance gap.** Recorded in the decision log as an
   open question, not a settled choice. A public institution will require it changed; the fix is
   small.
@@ -97,7 +138,8 @@ Say it plainly, it lands better than deflecting:
 
 - **118 elements**, all selectable — verified by clicking every one against the second display,
   118/118 correct
-- **73 tests**, CI green on format, typecheck, test, build, and dataset reproducibility
+- **131 tests**, CI green on format, typecheck, test, build, and dataset reproducibility
+- **Three input drivers** — mouse, hand, touch — asserted to produce identical event sequences
 - **120 virtual LEDs**, addressed by normalized arc length so the same effect drives a real strip of
   any length — about 230 at 60/m around a 55" display edge
 - **~half a day** to swap `BroadcastChannel` for the authoritative local process, because the event

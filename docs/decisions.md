@@ -208,7 +208,59 @@ different surface and could show whatever it needs to.
 
 ---
 
-## 13. Deferred, not dismissed
+## 13. Touch is implemented, not promised
+
+**Decision.** Build `TouchInteractionSource` now, mount it alongside the mouse driver, and extend
+the equivalence test to three drivers.
+
+**Why.** The repo claimed a swappable input seam. A claim that costs nothing to verify should be
+verified — and it turned out to need real thought rather than a rename: touch has no hover, contact
+is itself the press, and a panel reports resting forearms as contacts.
+
+**Consequence.** Both drivers mount together and each claims only its own `pointerType`. Without
+that filter a real panel fires both handlers for one contact and double-reports every press.
+
+**What would change our mind.** Nothing. It is ~80 lines and it converts an assertion into a test.
+
+---
+
+## 14. Trend overlays render unmeasured values as unmeasured
+
+**Decision.** A trend recolours the table by a measured property. Elements without a value get a
+distinct no-data colour, never a midpoint or a zero.
+
+**Why.** Eleven elements have no measured melting point, almost all of them synthetic superheavies.
+That gap is a fact about the limits of measurement, and it is more interesting than a smooth
+gradient would be. Fabricating a value to keep the picture tidy would be lying with colour.
+
+**Also.** Density is logarithmic, because it spans three orders of magnitude and a linear ramp
+renders everything except the heavy metals identically.
+
+**What would change our mind.** Nothing on the no-data rule. If a trend were added whose gaps are
+genuinely uninteresting, the ramp could interpolate — but it would need arguing.
+
+---
+
+## 15. The LED pipeline is built before the hardware
+
+**Decision.** Implement the full output path — governor, gamma, dither, channel order, COBS, CRC16 —
+against a `NullSink`, with a script that prints the real wire bytes.
+
+**Why.** Every detail in it is cheap to get right now and expensive to discover on a bench at
+midnight: WS2812 strips are GRB not RGB; LEDs clip hard and per-channel, unlike a screen blend; 8-bit
+linear wastes codes at the dark end; a 115200 UART cannot carry 230 RGBW pixels at 60 fps.
+
+**Also.** The governor is not exported, so an effect author cannot obtain a sink and bypass the power
+ceiling or the visibility floor. Composite brightness is a safety property, not a styling choice, and
+a test asserts the governor is unreachable.
+
+**What would change our mind.** If the installation turned out to project the glow rather than emit
+it, most of this becomes unnecessary — see the open question about where a strip mounts on a
+projected surface.
+
+---
+
+## 16. Deferred, not dismissed
 
 These were consciously left out of the prototype. Each has a seam waiting for it.
 
