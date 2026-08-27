@@ -4,6 +4,7 @@ import { PerimeterLights, perimeterOrigin, type Pulse } from "./PerimeterLights"
 import { SetupDrawer, type HandStatus } from "./SetupDrawer";
 import { HandPreview } from "./HandPreview";
 import { MouseInteractionSource } from "../../adapters/MouseInteractionSource";
+import { TouchInteractionSource } from "../../adapters/TouchInteractionSource";
 import {
   detectWebGLSupport,
   HandInteractionSource,
@@ -118,13 +119,17 @@ export function TableDisplay() {
     [bus],
   );
 
-  // Mouse is always live. It is never a shortcut around the controller.
+  // Mouse and touch are both always live, and neither is a shortcut around the
+  // controller. On a laptop only the mouse ever fires; on a panel only touch
+  // does. Each driver claims its own pointerType, so they never double-report.
   useEffect(() => {
     const surface = surfaceRef.current;
     if (!surface) return;
-    const source = new MouseInteractionSource(surface);
-    source.start(handleSample);
-    return () => source.stop();
+    const sources = [new MouseInteractionSource(surface), new TouchInteractionSource(surface)];
+    for (const source of sources) source.start(handleSample);
+    return () => {
+      for (const source of sources) source.stop();
+    };
   }, [handleSample]);
 
   // ---- calibration capture -------------------------------------------------

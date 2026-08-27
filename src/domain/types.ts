@@ -68,7 +68,7 @@ export type PointerSample = {
   engaged: boolean;
   /** 0..1 tracking confidence. Mouse input always reports 1. */
   confidence: number;
-  source: "mouse" | "hand";
+  source: "mouse" | "hand" | "touch";
 };
 
 export type InteractionPhase = "idle" | "hover" | "armed" | "confirmed" | "cooldown";

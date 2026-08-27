@@ -26,6 +26,19 @@ function sample(
   };
 }
 
+/**
+ * Events minus their timestamps. The drivers reach a press at different points
+ * in their own sample streams — a finger is already pressed on contact, a mouse
+ * presses on a later sample — so the moment differs by construction. The claim
+ * under test is that the *selections* and *light cues* are identical, in the
+ * same order, not that they happen on the same millisecond.
+ */
+function withoutTimestamps(events: readonly ExhibitEvent[]) {
+  return events.map((event) =>
+    event.type === "elementSelected" ? { ...event, timestamp: 0 } : event,
+  );
+}
+
 /** Drives a list of samples through the reducer, collecting every event emitted. */
 function run(samples: PointerSample[], times?: number[]) {
   let state: InteractionState = initialInteractionState;
@@ -116,13 +129,86 @@ describe("interaction controller", () => {
     expect(state.hovered).toBeNull();
   });
 
-  it("produces identical events for mouse and hand samples over the same cell", () => {
+  it("produces identical events for mouse, hand and touch over the same cell", () => {
+    // Each driver reaches a selection differently. A mouse hovers first, then
+    // presses. A hand tracks, then pinches. A finger arrives already pressed
+    // and leaves nothing behind. The exhibit events must not be able to tell.
     const mouse = run([sample(GOLD, false), sample(GOLD, true)]);
+
     const hand = run([
       { ...sample(GOLD, false), source: "hand", confidence: 0.9 },
       { ...sample(GOLD, true), source: "hand", confidence: 0.9 },
     ]);
-    expect(hand.events).toEqual(mouse.events);
+
+    const touch = run([
+      { ...sample(GOLD, true), source: "touch" },
+      { point: null, engaged: false, confidence: 1, source: "touch" },
+    ]);
+
+    expect(withoutTimestamps(hand.events)).toEqual(withoutTimestamps(mouse.events));
+    expect(withoutTimestamps(touch.events)).toEqual(withoutTimestamps(mouse.events));
+  });
+
+  it("keeps the three drivers identical across a realistic multi-cell session", () => {
+    // Carbon, then gold, then carbon again after the debounce window.
+    const plan = [CARBON, GOLD, CARBON];
+
+    const asMouse = plan
+      .flatMap((z) => [
+        { ...sample(z, false), source: "mouse" as const },
+        { ...sample(z, true), source: "mouse" as const },
+        { ...sample(z, false), source: "mouse" as const },
+      ])
+      .map((s, i) => [s, i * 700] as const);
+
+    const asHand = plan
+      .flatMap((z) => [
+        { ...sample(z, false), source: "hand" as const, confidence: 0.9 },
+        { ...sample(z, true), source: "hand" as const, confidence: 0.9 },
+        { ...sample(z, false), source: "hand" as const, confidence: 0.9 },
+      ])
+      .map((s, i) => [s, i * 700] as const);
+
+    // Touch has no hover, so a contact is press-then-gone.
+    const asTouch = plan
+      .flatMap((z) => [
+        { ...sample(z, true), source: "touch" as const },
+        { point: null, engaged: false, confidence: 1, source: "touch" as const },
+        { point: null, engaged: false, confidence: 1, source: "touch" as const },
+      ])
+      .map((s, i) => [s, i * 700] as const);
+
+    const events = (pairs: readonly (readonly [PointerSample, number])[]) =>
+      run(
+        pairs.map(([s]) => s),
+        pairs.map(([, t]) => t),
+      ).events;
+
+    const mouseEvents = withoutTimestamps(events(asMouse));
+    expect(mouseEvents.filter((e) => e.type === "elementSelected")).toHaveLength(3);
+    expect(withoutTimestamps(events(asHand))).toEqual(mouseEvents);
+    expect(withoutTimestamps(events(asTouch))).toEqual(mouseEvents);
+  });
+
+  it("treats a lifted finger as no pointer at all, unlike a mouse", () => {
+    // The behavioural difference the drivers are allowed to have: after a
+    // mouse release the cursor still hovers; after a lift there is nothing.
+    const afterMouseRelease = run([
+      sample(CARBON, false),
+      sample(CARBON, true),
+      sample(CARBON, false),
+    ]);
+    expect(afterMouseRelease.state.phase).toBe("hover");
+    expect(afterMouseRelease.state.hovered).toBe(CARBON);
+
+    const afterLift = run([
+      { ...sample(CARBON, true), source: "touch" },
+      { point: null, engaged: false, confidence: 1, source: "touch" },
+    ]);
+    expect(afterLift.state.phase).toBe("idle");
+    expect(afterLift.state.hovered).toBeNull();
+    // The selection survives either way — that is what the displays show.
+    expect(afterLift.state.selected).toBe(CARBON);
   });
 });
 

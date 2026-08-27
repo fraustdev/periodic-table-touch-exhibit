@@ -1,9 +1,13 @@
 import type { InteractionSource, PointerSample } from "../domain/types";
 
 /**
- * Turns pointer movement over the table surface into normalized samples. The
+ * Turns mouse movement over the table surface into normalized samples. The
  * surface element defines table space, so the same normalized coordinates work
  * at any window size.
+ *
+ * Only `pointerType === "mouse"` is claimed. Touch and pen belong to
+ * `TouchInteractionSource`, and on a panel that reports both, an unfiltered
+ * listener would emit two samples for one contact.
  */
 export class MouseInteractionSource implements InteractionSource {
   private listener: ((sample: PointerSample) => void) | null = null;
@@ -41,15 +45,25 @@ export class MouseInteractionSource implements InteractionSource {
     });
   }
 
-  private readonly handleMove = (event: PointerEvent) => this.emit(event, this.engaged);
+  private isMouse(event: PointerEvent): boolean {
+    // An empty pointerType comes from synthetic events in tests and headless
+    // browsers; treating it as a mouse keeps those paths working.
+    return event.pointerType === "mouse" || !event.pointerType;
+  }
+
+  private readonly handleMove = (event: PointerEvent) => {
+    if (!this.isMouse(event)) return;
+    this.emit(event, this.engaged);
+  };
 
   private readonly handleDown = (event: PointerEvent) => {
+    if (!this.isMouse(event)) return;
     this.engaged = true;
     this.emit(event, true);
   };
 
   private readonly handleUp = (event: PointerEvent) => {
-    if (!this.engaged) return;
+    if (!this.isMouse(event) || !this.engaged) return;
     this.engaged = false;
     this.emit(event, false);
   };
