@@ -64,7 +64,7 @@ export function createDefaultCalibration(): Calibration {
   };
 }
 
-export type QuadCheck = { ok: true } | { ok: false; reason: string };
+type QuadCheck = { ok: true } | { ok: false; reason: string };
 
 /** Twice the signed area of a polygon; sign carries the winding direction. */
 function signedArea(points: readonly Point[]): number {

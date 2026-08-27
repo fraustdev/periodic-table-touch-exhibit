@@ -1,15 +1,15 @@
 import { elements, getElement } from "../data/elements";
 import type { GridPosition, Point } from "./types";
 
-export const TABLE_COLUMNS = 18;
+const TABLE_COLUMNS = 18;
 
 /**
  * Row weights for the rendered table: seven main periods, a narrow spacer, then
  * the two f-block rows. The renderer and the hit test read the same numbers, so
  * a pointer can never disagree with what the visitor sees.
  */
-export const ROW_WEIGHTS = [1, 1, 1, 1, 1, 1, 1, 0.45, 1, 1] as const;
-export const SPACER_ROW_INDEX = 7; // zero-based index of the gap between blocks
+const ROW_WEIGHTS = [1, 1, 1, 1, 1, 1, 1, 0.45, 1, 1] as const;
+const SPACER_ROW_INDEX = 7; // zero-based index of the gap between blocks
 
 const TOTAL_WEIGHT = ROW_WEIGHTS.reduce((sum, weight) => sum + weight, 0);
 
@@ -35,7 +35,7 @@ export function getElementPosition(atomicNumber: number): GridPosition {
   return { row: element.gridRow, column: element.gridColumn };
 }
 
-export function getElementAt(position: GridPosition): number | null {
+function getElementAt(position: GridPosition): number | null {
   return byPosition.get(`${position.row}:${position.column}`) ?? null;
 }
 

@@ -37,13 +37,13 @@ export type ElementRecord = {
   discoveredBy: string | null;
 };
 
-export type ElementSelectedEvent = {
+type ElementSelectedEvent = {
   type: "elementSelected";
   atomicNumber: number;
   timestamp: number;
 };
 
-export type LightsPulseEvent = {
+type LightsPulseEvent = {
   type: "lightsPulse";
   category: ElementCategory;
   intensity: number;
@@ -54,7 +54,7 @@ export type LightsPulseEvent = {
  * reloads mid-session catches up immediately instead of sitting in its attract
  * state until the next visitor touch.
  */
-export type RequestStateEvent = { type: "requestState" };
+type RequestStateEvent = { type: "requestState" };
 
 export type ExhibitEvent = ElementSelectedEvent | LightsPulseEvent | RequestStateEvent;
 

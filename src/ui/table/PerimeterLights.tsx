@@ -9,7 +9,7 @@ import type { LightCue, Point } from "../../domain/types";
  * WS2812-class strip without rewriting the effect.
  */
 const SEGMENTS = { top: 40, right: 20, bottom: 40, left: 20 } as const;
-export const LED_COUNT = SEGMENTS.top + SEGMENTS.right + SEGMENTS.bottom + SEGMENTS.left;
+const LED_COUNT = SEGMENTS.top + SEGMENTS.right + SEGMENTS.bottom + SEGMENTS.left;
 
 const SPAN = {
   top: SEGMENTS.top / LED_COUNT,
@@ -27,63 +27,70 @@ const START = {
 
 type Led = { loop: number; style: React.CSSProperties };
 
-function buildStrip(): Led[] {
-  const leds: Led[] = [];
-  const thin = "3px";
+const THIN = "3px";
+const ALONG_X = "min(1.4vw, 22px)";
+const ALONG_Y = "min(2.4vh, 22px)";
+const pct = (t: number) => `${t * 100}%`;
 
-  for (let i = 0; i < SEGMENTS.top; i += 1) {
-    const t = (i + 0.5) / SEGMENTS.top;
-    leds.push({
-      loop: START.top + t * SPAN.top,
-      style: {
+/**
+ * Each edge differs only in which CSS property carries the distance along it.
+ * `t` runs 0..1 in the clockwise direction, which is why the bottom and left
+ * edges anchor from their far side.
+ */
+const EDGES = [
+  {
+    edge: "top",
+    style: (t: number) =>
+      ({
         top: 0,
-        left: `${t * 100}%`,
-        width: `min(1.4vw, 22px)`,
-        height: thin,
+        left: pct(t),
+        width: ALONG_X,
+        height: THIN,
         transform: "translateX(-50%)",
-      },
-    });
-  }
-  for (let i = 0; i < SEGMENTS.right; i += 1) {
-    const t = (i + 0.5) / SEGMENTS.right;
-    leds.push({
-      loop: START.right + t * SPAN.right,
-      style: {
+      }) as const,
+  },
+  {
+    edge: "right",
+    style: (t: number) =>
+      ({
         right: 0,
-        top: `${t * 100}%`,
-        width: thin,
-        height: `min(2.4vh, 22px)`,
+        top: pct(t),
+        width: THIN,
+        height: ALONG_Y,
         transform: "translateY(-50%)",
-      },
-    });
-  }
-  for (let i = 0; i < SEGMENTS.bottom; i += 1) {
-    const t = (i + 0.5) / SEGMENTS.bottom;
-    leds.push({
-      loop: START.bottom + t * SPAN.bottom,
-      style: {
+      }) as const,
+  },
+  {
+    edge: "bottom",
+    style: (t: number) =>
+      ({
         bottom: 0,
-        right: `${t * 100}%`,
-        width: `min(1.4vw, 22px)`,
-        height: thin,
+        right: pct(t),
+        width: ALONG_X,
+        height: THIN,
         transform: "translateX(50%)",
-      },
-    });
-  }
-  for (let i = 0; i < SEGMENTS.left; i += 1) {
-    const t = (i + 0.5) / SEGMENTS.left;
-    leds.push({
-      loop: START.left + t * SPAN.left,
-      style: {
+      }) as const,
+  },
+  {
+    edge: "left",
+    style: (t: number) =>
+      ({
         left: 0,
-        bottom: `${t * 100}%`,
-        width: thin,
-        height: `min(2.4vh, 22px)`,
+        bottom: pct(t),
+        width: THIN,
+        height: ALONG_Y,
         transform: "translateY(50%)",
-      },
-    });
-  }
-  return leds;
+      }) as const,
+  },
+] as const;
+
+function buildStrip(): Led[] {
+  return EDGES.flatMap(({ edge, style }) =>
+    Array.from({ length: SEGMENTS[edge] }, (_, index): Led => {
+      const t = (index + 0.5) / SEGMENTS[edge];
+      return { loop: START[edge] + t * SPAN[edge], style: style(t) };
+    }),
+  );
 }
 
 /** Nearest point on the loop to a normalized table-space point. */

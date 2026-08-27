@@ -11,7 +11,7 @@ export type DwellState = {
   driftingSince: number | null;
 };
 
-export type DwellResult =
+type DwellResult =
   | { kind: "idle"; state: null }
   | { kind: "holding"; state: DwellState; progress: number }
   | { kind: "captured"; state: null; point: Point };

@@ -52,13 +52,13 @@ export type HandFrame = {
   diagnostics: HandDiagnostics;
 };
 
-export type Delegate = "GPU" | "CPU";
+type Delegate = "GPU" | "CPU";
 
 /**
  * Where the last tick stopped. Every early return in detect() names itself, so
  * a stalled pipeline reports its own cause instead of looking like "no hand".
  */
-export type PipelineStage =
+type PipelineStage =
   | "starting"
   | "no-model"
   | "video-not-ready"
@@ -82,7 +82,7 @@ export const STAGE_LABELS: Record<PipelineStage, string> = {
 };
 
 /** Enough to tell where the pipeline stopped, without opening a debugger. */
-export type HandDiagnostics = {
+type HandDiagnostics = {
   /** The most recent tick's stage. Flickers at animation-frame rate. */
   stage: PipelineStage;
   /**

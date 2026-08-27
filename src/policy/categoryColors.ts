@@ -19,7 +19,7 @@ export const CATEGORY_COLORS: Record<ElementCategory, string> = {
   unknown: "#7d7772",
 };
 
-export const CATEGORY_LABELS: Record<ElementCategory, string> = {
+const CATEGORY_LABELS: Record<ElementCategory, string> = {
   "alkali-metal": "Alkali metal",
   "alkaline-earth-metal": "Alkaline earth metal",
   "transition-metal": "Transition metal",

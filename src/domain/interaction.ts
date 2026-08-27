@@ -27,7 +27,7 @@ export const initialInteractionState: InteractionState = {
   source: null,
 };
 
-export type InteractionResult = {
+type InteractionResult = {
   state: InteractionState;
   events: ExhibitEvent[];
 };

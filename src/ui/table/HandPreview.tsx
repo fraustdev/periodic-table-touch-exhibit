@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { HandFrame } from "../../adapters/HandInteractionSource";
+import { INDEX_TIP, THUMB_TIP } from "../../adapters/handMath";
 
 /** MediaPipe's 21-landmark hand skeleton. */
 const CONNECTIONS: [number, number][] = [
@@ -110,7 +111,7 @@ export function HandPreview({ stream, frame, videoRef, className }: Props) {
     }
 
     landmarks.forEach((landmark, index) => {
-      const isPinchPoint = index === 4 || index === 8;
+      const isPinchPoint = index === THUMB_TIP || index === INDEX_TIP;
       context.fillStyle = isPinchPoint ? "#f4eee2" : "rgba(244, 238, 226, 0.5)";
       context.beginPath();
       context.arc(landmark.x * width, landmark.y * height, isPinchPoint ? 4 : 2, 0, Math.PI * 2);
@@ -118,7 +119,7 @@ export function HandPreview({ stream, frame, videoRef, className }: Props) {
     });
 
     // Ring the index fingertip: it is the point calibration actually samples.
-    const tip = landmarks[8];
+    const tip = landmarks[INDEX_TIP];
     if (tip) {
       const engaged = Number.isFinite(frame!.pinch) && frame!.pinch <= 0.28;
       context.strokeStyle = engaged ? "#f4eee2" : "rgba(217, 182, 84, 0.9)";

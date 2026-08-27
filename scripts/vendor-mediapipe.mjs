@@ -3,7 +3,8 @@
  * demo time. The wasm comes from node_modules; the model is a one-time download.
  * Runs automatically after npm install.
  */
-import { cp, mkdir, stat, writeFile } from "node:fs/promises";
+import { statSync } from "node:fs";
+import { cp, mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -13,10 +14,10 @@ const modelOut = join(root, "public", "mediapipe", "models", "hand_landmarker.ta
 const MODEL_URL =
   "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
 
-async function exists(path) {
+function hasContent(path) {
   try {
-    const info = await stat(path);
-    return info.size > 0;
+    const info = statSync(path);
+    return info.isDirectory() || info.size > 0;
   } catch {
     return false;
   }
@@ -26,14 +27,14 @@ await mkdir(wasmOut, { recursive: true });
 await mkdir(dirname(modelOut), { recursive: true });
 
 const wasmSource = join(root, "node_modules", "@mediapipe", "tasks-vision", "wasm");
-if (await exists(wasmSource)) {
+if (hasContent(wasmSource)) {
   await cp(wasmSource, wasmOut, { recursive: true });
   console.log("Vendored MediaPipe wasm from node_modules.");
 } else {
   console.warn("@mediapipe/tasks-vision is not installed; skipping wasm.");
 }
 
-if (await exists(modelOut)) {
+if (hasContent(modelOut)) {
   console.log("Hand landmarker model already present.");
 } else {
   try {

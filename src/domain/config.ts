@@ -11,8 +11,6 @@ export const EXHIBIT_CONFIG = {
   minConfidence: 0.5,
   /** Re-selecting the same cell is ignored for this long. */
   sameCellDebounceMs: 1_000,
-  /** How long a confirmed cell stays visibly confirmed before settling. */
-  confirmFlashMs: 420,
   /** Cross-window channel name. */
   channelName: "periodic-exhibit",
   /** Corner-calibration dwell before a point is captured. */
