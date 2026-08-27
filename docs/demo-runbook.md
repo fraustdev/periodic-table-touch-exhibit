@@ -134,12 +134,56 @@ Say it plainly, it lands better than deflecting:
 | Anything white-screens    | The error boundary shows a museum-styled card with a Restart button. Click it.                                                 |
 | Total wedge               | `git checkout demo-ready` is a known-good tag.                                                                                 |
 
+## The live build, if you want one
+
+There is one deliberate gap: **there is no boiling-point overlay.** The data is in the dataset and
+adding it is a single entry. If the conversation turns to how you work, fill that gap in front of
+him — it proves the architecture and the workflow in one move, and nothing you say can do that.
+
+**Setup:** have the repo open, the dev server running, and a terminal ready.
+
+**1. Show where the answer lives, before writing anything.** Open `CLAUDE.md` and scroll to the
+"where to make common changes" table. Point at the row: _Add a trend overlay → `src/policy/trends.ts`
+— add to `TRENDS`, nothing else changes._
+
+> "This is what my Claude reads first in this repo. It's not documentation I hope someone opens —
+> it loads automatically."
+
+**2. Run the skill.** Type `/add-trend` and ask for boiling point.
+
+It will check coverage first (104 of 118 — above the floor), then compute whether the scale should be
+linear or logarithmic. **Let it do that out loud**, because it is the interesting part: the range
+spans a ratio of 1469, which naively suggests a log scale, but the median sits at 0.442 of the linear
+range, which is almost perfectly centred. **Linear is correct.** Density, by contrast, has its median
+at 0.192 and genuinely needs log.
+
+> "The skill encodes the judgement, not just the steps. I got this rule wrong the first time and
+> fixed it against the real data."
+
+**3. Let it write the entry and the test, then verify.**
+
+```bash
+npm test
+npm run verify:browser
+```
+
+The browser suite picks up the new trend automatically — it iterates whatever is in `TRENDS` and
+checks each one recolours, names itself, labels four ticks, and handles an unmeasured element.
+
+**4. Click it in the browser.** Tungsten boils at 5930 °C and will be the brightest cell on the
+board. Helium at −269 °C the darkest. Carbon and phosphorus stay grey, because they sublime rather
+than boil and the dataset honestly has no value for them.
+
+**If it goes wrong**, that is still a usable moment: `git checkout src/policy/trends.ts` and say the
+verification caught it. A demo where the safety net visibly works is not a failed demo.
+
 ## Numbers worth having ready
 
 - **118 elements**, all selectable — verified by clicking every one against the second display,
   118/118 correct
-- **131 tests**, CI green on format, typecheck, test, build, and dataset reproducibility
+- **135 unit tests plus 9 browser checks**; `npm run verify` runs everything in one command
 - **Three input drivers** — mouse, hand, touch — asserted to produce identical event sequences
+- **CI green** on format, typecheck, tests, build, and dataset reproducibility
 - **120 virtual LEDs**, addressed by normalized arc length so the same effect drives a real strip of
   any length — about 230 at 60/m around a 55" display edge
 - **~half a day** to swap `BroadcastChannel` for the authoritative local process, because the event
