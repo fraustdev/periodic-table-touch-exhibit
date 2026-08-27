@@ -1,78 +1,43 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PeriodicTable } from "./PeriodicTable";
 import { PerimeterLights, perimeterOrigin, type Pulse } from "./PerimeterLights";
-import { SetupDrawer, type HandStatus } from "./SetupDrawer";
+import { SetupDrawer } from "./SetupDrawer";
 import { HandPreview } from "./HandPreview";
 import { MouseInteractionSource } from "../../adapters/MouseInteractionSource";
 import { TouchInteractionSource } from "../../adapters/TouchInteractionSource";
-import {
-  detectWebGLSupport,
-  HandInteractionSource,
-  type HandFrame,
-} from "../../adapters/HandInteractionSource";
-import {
-  describeCameraError,
-  listCameras,
-  openCamera,
-  stopStream,
-  streamLabel,
-  type CameraDevice,
-} from "../../adapters/camera";
 import { useExhibitEventBus } from "../../hooks/useExhibitEventBus";
+import { useHandTracking } from "../../hooks/useHandTracking";
+import { useCalibrationRun } from "../../hooks/useCalibrationRun";
 import {
   initialInteractionState,
   reduceInteraction,
   type InteractionState,
 } from "../../domain/interaction";
 import { getCellCenter } from "../../domain/elementLayout";
-import {
-  CALIBRATION_CORNERS,
-  clearCalibration,
-  createCalibration,
-  createDefaultCalibration,
-  isCalibrationValid,
-  loadCalibration,
-  saveCalibration,
-  validateCapturedQuad,
-  type Calibration,
-} from "../../domain/calibration";
-import { reduceDwell, type DwellState } from "../../domain/calibrationDwell";
+import type { Matrix3 } from "../../domain/calibration";
 import { CATEGORY_ORDER, getCategoryColor, getCategoryLabel } from "../../policy/categoryColors";
+import {
+  getTrend,
+  normalizeTrend,
+  trendColor,
+  trendGradient,
+  trendInk,
+  trendRange,
+  TRENDS,
+  type TrendKey,
+} from "../../policy/trends";
 import { getElement } from "../../data/elements";
-import type { Point } from "../../domain/types";
-
-type CalibrationRun = { step: number; captured: Point[]; progress: number };
-
-const HAND_ENABLED_KEY = "periodic-exhibit.hand-enabled.v1";
-
-function wasHandEnabled(): boolean {
-  try {
-    return localStorage.getItem(HAND_ENABLED_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
+import type { ElementRecord, Point, PointerSample } from "../../domain/types";
 
 export function TableDisplay() {
   const surfaceRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   const [interaction, setInteraction] = useState<InteractionState>(initialInteractionState);
   const [confirmToken, setConfirmToken] = useState(0);
   const [pulse, setPulse] = useState<Pulse | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [handStatus, setHandStatus] = useState<HandStatus>({ kind: "off" });
-  const [devices, setDevices] = useState<CameraDevice[]>([]);
-  const [deviceId, setDeviceId] = useState<string | null>(null);
-  const [frame, setFrame] = useState<HandFrame | null>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
-  const [calibration, setCalibration] = useState<Calibration | null>(
-    () => loadCalibration() ?? createDefaultCalibration(),
-  );
-  /** A finished capture awaiting the operator's confirmation. */
-  const [pending, setPending] = useState<Calibration | null>(null);
-  const [run, setRun] = useState<CalibrationRun | null>(null);
   const [handHasSelected, setHandHasSelected] = useState(false);
+  const [trendKey, setTrendKey] = useState<TrendKey>("category");
 
   const interactionRef = useRef(interaction);
   interactionRef.current = interaction;
@@ -92,7 +57,7 @@ export function TableDisplay() {
 
   /** The one path from a pointer sample to exhibit state and events. */
   const handleSample = useCallback(
-    (sample: Parameters<Parameters<MouseInteractionSource["start"]>[0]>[0]) => {
+    (sample: PointerSample) => {
       const { state, events } = reduceInteraction(
         interactionRef.current,
         sample,
@@ -132,206 +97,31 @@ export function TableDisplay() {
     };
   }, [handleSample]);
 
-  // ---- calibration capture -------------------------------------------------
-
-  const runRef = useRef<CalibrationRun | null>(null);
-  runRef.current = run;
-  const dwellRef = useRef<DwellState | null>(null);
-
-  const observeFrame = useCallback((next: HandFrame) => {
-    setFrame(next);
-
-    const active = runRef.current;
-    if (!active) return;
-
-    const result = reduceDwell(dwellRef.current, next.cameraPoint, performance.now());
-    dwellRef.current = result.state;
-
-    if (result.kind === "idle") {
-      setRun((current) =>
-        current && current.progress !== 0 ? { ...current, progress: 0 } : current,
-      );
-      return;
-    }
-
-    if (result.kind === "holding") {
-      setRun((current) =>
-        current && Math.abs(current.progress - result.progress) > 0.02
-          ? { ...current, progress: result.progress }
-          : current,
-      );
-      return;
-    }
-
-    const captured = [...active.captured, result.point];
-    if (captured.length < CALIBRATION_CORNERS.length) {
-      setRun({ step: captured.length, captured, progress: 0 });
-      return;
-    }
-
-    setRun(null);
-
-    // Reject a capture that solves but maps to nonsense, with the reason.
-    const check = validateCapturedQuad(captured);
-    if (!check.ok) {
-      setHandStatus({ kind: "error", message: check.reason });
-      return;
-    }
-
-    const surface = surfaceRef.current;
-    const built = createCalibration(captured, {
-      cameraLabel: streamLabel(streamRef.current),
-      viewport: {
-        width: surface?.clientWidth ?? window.innerWidth,
-        height: surface?.clientHeight ?? window.innerHeight,
-      },
-      capturedAt: Date.now(),
-    });
-
-    if (!built) {
-      setHandStatus({
-        kind: "error",
-        message:
-          "Those four points did not form a usable transform. Try again, tracing a larger rectangle.",
-      });
-      return;
-    }
-
-    // Nothing is persisted until it has been seen working.
-    setPending(built);
-  }, []);
-
-  // ---- hand input ----------------------------------------------------------
-
-  const streamRef = useRef<MediaStream | null>(null);
-  const sourceRef = useRef<HandInteractionSource | null>(null);
   /**
-   * Auto-resume and a manual click can both call enableCamera. Without a
-   * generation token the later call tears down the earlier call's stream after
-   * the earlier call has already attached it, leaving a landmarker reading a
-   * dead video — a camera that looks on but never advances a frame.
+   * Calibration and the camera need each other: calibration maps camera space
+   * to table space, and it is keyed to the camera's label. This ref is the one
+   * seam between them — the hand driver reads the transform through it, so the
+   * hooks can be created in either order.
    */
-  const startGeneration = useRef(0);
+  const transformRef = useRef<() => Matrix3 | null>(() => null);
 
-  const pendingRef = useRef(pending);
-  pendingRef.current = pending;
+  const hand = useHandTracking({
+    onSample: handleSample,
+    onCameraPoint: (point) => calibrationRef.current?.(point),
+    getTransform: transformRef,
+  });
 
-  const enableCamera = useCallback(async () => {
-    const webgl = detectWebGLSupport();
-    if (!webgl.supported) {
-      setHandStatus({ kind: "error", message: webgl.reason });
-      return;
-    }
+  const calibration = useCalibrationRun({
+    surfaceRef,
+    cameraLabel: hand.cameraLabel,
+    onError: hand.reportError,
+  });
 
-    const generation = (startGeneration.current += 1);
-    const superseded = () => generation !== startGeneration.current;
+  transformRef.current = calibration.getTransform;
 
-    // Tear down synchronously, so nothing that follows can adopt stale handles.
-    sourceRef.current?.stop();
-    sourceRef.current = null;
-    stopStream(streamRef.current);
-    streamRef.current = null;
-    setStream(null);
-    setFrame(null);
-    setHandStatus({ kind: "loading" });
-
-    let stream: MediaStream | null = null;
-    let source: HandInteractionSource | null = null;
-    try {
-      stream = await openCamera(deviceId ?? undefined);
-      if (superseded()) return stopStream(stream);
-
-      const video = videoRef.current;
-      if (!video) throw new Error("The camera preview is not mounted.");
-      video.srcObject = stream;
-      await video.play();
-      if (superseded()) return stopStream(stream);
-
-      source = new HandInteractionSource({
-        video,
-        getTransform: () =>
-          runRef.current ? null : (pendingRef.current ?? effectiveRef.current).matrix,
-        onFrame: observeFrame,
-        onFatal: (message) => {
-          if (superseded()) return;
-          sourceRef.current = null;
-          stopStream(streamRef.current);
-          streamRef.current = null;
-          setStream(null);
-          setHandStatus({ kind: "error", message });
-        },
-      });
-      await source.start(handleSample);
-      if (superseded()) {
-        source.stop();
-        return stopStream(stream);
-      }
-
-      streamRef.current = stream;
-      sourceRef.current = source;
-      setStream(stream);
-      setDevices(await listCameras());
-      setHandStatus({ kind: "ready" });
-      try {
-        localStorage.setItem(HAND_ENABLED_KEY, "1");
-      } catch {
-        // A locked-down browser just loses the convenience, not the exhibit.
-      }
-    } catch (error) {
-      source?.stop();
-      stopStream(stream);
-      if (superseded()) return;
-      streamRef.current = null;
-      setStream(null);
-      setHandStatus({ kind: "error", message: describeCameraError(error) });
-    }
-  }, [deviceId, handleSample, observeFrame]);
-
-  useEffect(
-    () => () => {
-      sourceRef.current?.stop();
-      stopStream(streamRef.current);
-    },
-    [],
-  );
-
-  // Release the device before the page goes away, so a reload does not find its
-  // own previous instance still holding the camera.
-  useEffect(() => {
-    const release = () => {
-      sourceRef.current?.stop();
-      stopStream(streamRef.current);
-    };
-    window.addEventListener("pagehide", release);
-    return () => window.removeEventListener("pagehide", release);
-  }, []);
-
-  // Come back up the way it went down. Permission is already granted at this
-  // point, so this does not prompt; if it fails, the mouse exhibit is intact.
-  const autoStarted = useRef(false);
-  useEffect(() => {
-    if (autoStarted.current || !wasHandEnabled()) return;
-    autoStarted.current = true;
-    void enableCamera();
-  }, [enableCamera]);
-
-  // A corner calibration only holds while the camera and table geometry match.
-  // When it no longer does, fall back to the default region rather than quietly
-  // applying a mapping that was measured against different geometry.
-  const effective = useMemo(() => {
-    const surface = surfaceRef.current;
-    const valid = isCalibrationValid(calibration, {
-      cameraLabel: streamLabel(streamRef.current),
-      viewport: {
-        width: surface?.clientWidth ?? window.innerWidth,
-        height: surface?.clientHeight ?? window.innerHeight,
-      },
-    });
-    return valid && calibration ? calibration : createDefaultCalibration();
-  }, [calibration, handStatus]);
-
-  const effectiveRef = useRef(effective);
-  effectiveRef.current = effective;
+  /** Same reason as transformRef, in the other direction. */
+  const calibrationRef = useRef<((point: Point | null) => void) | null>(null);
+  calibrationRef.current = calibration.observeCameraPoint;
 
   // ---- presentation --------------------------------------------------------
 
@@ -344,19 +134,51 @@ export function TableDisplay() {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setDrawerOpen(false);
-        setRun(null);
-        setPending(null);
-        dwellRef.current = null;
+        calibration.cancel();
       }
-      if (event.key.toLowerCase() === "s" && event.metaKey === false && event.ctrlKey === false) {
+      if (event.metaKey || event.ctrlKey) return;
+      if (event.key.toLowerCase() === "s") {
         setDrawerOpen((open) => !open);
+      }
+      if (event.key.toLowerCase() === "t") {
+        setTrendKey((current) => {
+          const at = TRENDS.findIndex((option) => option.key === current);
+          return TRENDS[(at + 1) % TRENDS.length].key;
+        });
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [calibration]);
 
-  const target = run ? CALIBRATION_CORNERS[run.step] : null;
+  const { run, target, pending, effective } = calibration;
+
+  const trend = getTrend(trendKey);
+  const trendActive = trendKey !== "category";
+  // The range is a property of the dataset, not of the render.
+  const range = useMemo(() => trendRange(trend), [trend]);
+  const colorFor = useCallback(
+    (element: ElementRecord) =>
+      trendActive
+        ? trendColor(normalizeTrend(trend, range, element))
+        : getCategoryColor(element.category),
+    [range, trend, trendActive],
+  );
+  const inkFor = useCallback(
+    (element: ElementRecord) =>
+      trendActive ? trendInk(normalizeTrend(trend, range, element)) : "var(--bone-100)",
+    [range, trend, trendActive],
+  );
+  const readoutFor = useCallback(
+    (element: ElementRecord) => {
+      if (!trendActive) return null;
+      const value = trend.value(element);
+      return value === null
+        ? `${trend.label}: not measured`
+        : `${trend.label}: ${trend.format(value)}`;
+    },
+    [trend, trendActive],
+  );
   const surfaceBox = surfaceRef.current?.getBoundingClientRect();
 
   return (
@@ -373,10 +195,10 @@ export function TableDisplay() {
           The Periodic Table <em>— an interactive exhibit</em>
         </h1>
         <div className="masthead__meta">
-          <span className={`status${handStatus.kind === "ready" ? " status--live" : ""}`}>
+          <span className={`status${hand.status.kind === "ready" ? " status--live" : ""}`}>
             <span className="status__dot" />
             <span className="eyebrow">
-              {handStatus.kind === "ready"
+              {hand.status.kind === "ready"
                 ? effective.source === "corners"
                   ? "Hand + mouse"
                   : "Hand · default region"
@@ -385,7 +207,7 @@ export function TableDisplay() {
           </span>
           <span className="eyebrow">Station 01</span>
           <button
-            className={`drawer-toggle${handStatus.kind === "error" ? " drawer-toggle--alert" : ""}`}
+            className={`drawer-toggle${hand.status.kind === "error" ? " drawer-toggle--alert" : ""}`}
             onClick={() => setDrawerOpen(true)}
             aria-expanded={drawerOpen}
           >
@@ -396,28 +218,61 @@ export function TableDisplay() {
 
       <PeriodicTable
         ref={surfaceRef}
+        colorFor={colorFor}
+        inkFor={inkFor}
+        readoutFor={readoutFor}
+        trendActive={trendActive}
         interaction={interaction}
         confirmToken={confirmToken}
         showReticle={interaction.source === "hand"}
       />
 
       <footer className="footer">
-        <div className="legend">
-          {CATEGORY_ORDER.map((category) => (
-            <span
-              key={category}
-              className={`legend__item${activeCategory === category ? " legend__item--active" : ""}`}
-            >
-              <span
-                className="legend__swatch"
-                style={{ ["--swatch" as string]: getCategoryColor(category) }}
-              />
-              {getCategoryLabel(category)}
-            </span>
-          ))}
+        <div className="footer__left">
+          <div className="trend-switch" role="group" aria-label="Colour the table by">
+            {TRENDS.map((option) => (
+              <button
+                key={option.key}
+                className={`trend-switch__option${option.key === trendKey ? " trend-switch__option--active" : ""}`}
+                onClick={() => setTrendKey(option.key)}
+                aria-pressed={option.key === trendKey}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          {trendActive ? (
+            <div className="trend-scale">
+              <div className="trend-scale__bar" style={{ background: trendGradient() }} />
+              <div className="trend-scale__ends">
+                <span>{trend.lowLabel}</span>
+                <span>{trend.highLabel}</span>
+              </div>
+              <p className="trend-scale__note eyebrow">
+                {trend.note}
+                {range.missing > 0 && ` ${range.missing} elements have no measured value.`}
+              </p>
+            </div>
+          ) : (
+            <div className="legend">
+              {CATEGORY_ORDER.map((category) => (
+                <span
+                  key={category}
+                  className={`legend__item${activeCategory === category ? " legend__item--active" : ""}`}
+                >
+                  <span
+                    className="legend__swatch"
+                    style={{ ["--swatch" as string]: getCategoryColor(category) }}
+                  />
+                  {getCategoryLabel(category)}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         <p className={`prompt${handHasSelected ? " prompt--hidden" : ""}`}>
-          {handStatus.kind === "ready"
+          {hand.status.kind === "ready"
             ? "Point, then pinch to choose."
             : "Choose an element to begin."}
         </p>
@@ -434,17 +289,17 @@ export function TableDisplay() {
             }}
           />
           <div className="calibration__center">
-            <HandPreview stream={stream} frame={frame} className="calibration__preview" />
+            <HandPreview stream={hand.stream} frame={hand.frame} className="calibration__preview" />
 
             <div className="calibration__caption">
               <p className="eyebrow" style={{ margin: 0 }}>
-                Calibration · point {run.step + 1} of {CALIBRATION_CORNERS.length}
+                Calibration · point {run.step + 1} of {calibration.cornerCount}
               </p>
               <strong>Hold your fingertip on the {target.label.toLowerCase()} marker</strong>
               <p style={{ margin: 0, color: "var(--bone-400)", fontSize: "0.8125rem" }}>
                 Keep still until the marker fills. Press Escape to cancel.
               </p>
-              {!frame?.landmarks && (
+              {!hand.frame?.landmarks && (
                 <p className="calibration__warn eyebrow">
                   No hand visible — move into the camera view
                 </p>
@@ -466,24 +321,10 @@ export function TableDisplay() {
             </p>
           </div>
           <div className="verify__actions">
-            <button
-              className="button button--primary"
-              onClick={() => {
-                saveCalibration(pending);
-                setCalibration(pending);
-                setPending(null);
-              }}
-            >
+            <button className="button button--primary" onClick={calibration.accept}>
               Looks right
             </button>
-            <button
-              className="button"
-              onClick={() => {
-                setPending(null);
-                dwellRef.current = null;
-                setRun({ step: 0, captured: [], progress: 0 });
-              }}
-            >
+            <button className="button" onClick={calibration.redo}>
               Redo
             </button>
           </div>
@@ -493,95 +334,38 @@ export function TableDisplay() {
       <SetupDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        status={handStatus}
-        devices={devices}
-        selectedDeviceId={deviceId}
-        onSelectDevice={(next) => setDeviceId(next)}
-        onEnableCamera={enableCamera}
+        status={hand.status}
+        devices={hand.devices}
+        selectedDeviceId={hand.deviceId}
+        onSelectDevice={hand.setDeviceId}
+        onEnableCamera={hand.enable}
+        onDisableCamera={hand.disable}
         onOpenInfoWindow={() => {
           window.open("/info", "exhibit-info", "popup=yes,width=1280,height=800");
         }}
         onStartCalibration={() => {
-          dwellRef.current = null;
-          setPending(null);
-          setRun({ step: 0, captured: [], progress: 0 });
+          calibration.start();
           setDrawerOpen(false);
         }}
-        onClearCalibration={() => {
-          clearCalibration();
-          setPending(null);
-          setCalibration(createDefaultCalibration());
-        }}
-        buildReport={() => {
-          const video = videoRef.current;
-          const track = streamRef.current?.getVideoTracks()[0];
-          return JSON.stringify(
+        onClearCalibration={calibration.resetToDefault}
+        calibrationSource={effective.source}
+        frame={hand.frame}
+        stream={hand.stream}
+        videoRef={hand.videoRef}
+        buildReport={() =>
+          JSON.stringify(
             {
               when: new Date().toISOString(),
               userAgent: navigator.userAgent,
-              webgl: detectWebGLSupport(),
-              handStatus,
               calibrationSource: effective.source,
-              calibration: calibration
-                ? { cameraLabel: calibration.cameraLabel, viewport: calibration.viewport }
-                : null,
-              devices,
-              selectedDeviceId: deviceId,
-              stream: streamRef.current
-                ? {
-                    active: streamRef.current.active,
-                    tracks: streamRef.current.getTracks().length,
-                    label: track?.label,
-                    readyState: track?.readyState,
-                    enabled: track?.enabled,
-                    muted: track?.muted,
-                    settings: track?.getSettings?.(),
-                  }
-                : null,
-              video: video
-                ? {
-                    readyState: video.readyState,
-                    size: `${video.videoWidth}x${video.videoHeight}`,
-                    paused: video.paused,
-                    currentTime: video.currentTime,
-                    hasSrcObject: !!video.srcObject,
-                    srcMatchesStream: video.srcObject === streamRef.current,
-                  }
-                : null,
-              driverAttached: !!sourceRef.current,
-              frame: frame
-                ? {
-                    fps: Math.round(frame.fps),
-                    delegate: frame.delegate,
-                    confidence: frame.confidence,
-                    pinch: frame.pinch,
-                    hasLandmarks: !!frame.landmarks,
-                    diagnostics: frame.diagnostics,
-                  }
-                : null,
+              calibrationViewport: effective.viewport,
+              calibrationCamera: effective.cameraLabel,
+              ...hand.describe(),
             },
             null,
             2,
-          );
-        }}
-        onDisableCamera={() => {
-          sourceRef.current?.stop();
-          sourceRef.current = null;
-          stopStream(streamRef.current);
-          streamRef.current = null;
-          setStream(null);
-          setFrame(null);
-          setHandStatus({ kind: "off" });
-          try {
-            localStorage.removeItem(HAND_ENABLED_KEY);
-          } catch {
-            // ignored
-          }
-        }}
-        calibrationSource={effective.source}
-        frame={frame}
-        stream={stream}
-        videoRef={videoRef}
+          )
+        }
       />
     </main>
   );

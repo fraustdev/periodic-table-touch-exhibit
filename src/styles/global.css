@@ -381,6 +381,50 @@ button {
   }
 }
 
+/* Under a trend overlay the colour *is* the data, not a reinforcement of it, so
+   the fill has to dominate. Mixed toward pure black rather than the warm ground
+   so the top of the ramp stays dark enough for the symbol to read. */
+.cell--trend {
+  background: linear-gradient(
+    170deg,
+    color-mix(in oklab, var(--cat) 52%, var(--ink-000)),
+    color-mix(in oklab, var(--cat) 30%, var(--ink-000))
+  );
+  border-color: color-mix(in oklab, var(--cat) 60%, transparent);
+}
+
+.cell--trend::after {
+  opacity: 0.9;
+}
+
+.cell--trend .cell__symbol {
+  color: var(--bone-100);
+}
+
+.cell--trend .cell__number {
+  color: color-mix(in oklab, var(--bone-100) 65%, transparent);
+}
+
+/* The hover fill can reach the pale end of the ramp, where bone-white type is
+   unreadable, so the ink is chosen from the cell's own luminance. */
+.cell--trend.cell--hovered .cell__symbol,
+.cell--trend.cell--selected .cell__symbol {
+  color: var(--cat-ink, var(--bone-100));
+}
+
+.cell--trend.cell--hovered .cell__number,
+.cell--trend.cell--selected .cell__number {
+  color: color-mix(in oklab, var(--cat-ink, var(--bone-100)) 70%, transparent);
+}
+
+.cell--trend.cell--hovered {
+  background: linear-gradient(
+    170deg,
+    color-mix(in oklab, var(--cat) 78%, var(--ink-000)),
+    color-mix(in oklab, var(--cat) 52%, var(--ink-000))
+  );
+}
+
 /* group/period passive illumination — the cheapest teaching feature there is */
 .cell--related {
   border-color: color-mix(in oklab, var(--cat) 45%, transparent);
@@ -546,6 +590,82 @@ button {
   align-items: flex-end;
   justify-content: space-between;
   gap: 2rem;
+}
+
+.footer__left {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+/* ---------- trend overlay ---------- */
+
+.trend-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.trend-switch__option {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  padding: 0.28rem 0.6rem;
+  border: var(--rule);
+  border-radius: 100px;
+  color: var(--bone-600);
+  transition:
+    color 200ms var(--ease-out),
+    border-color 200ms var(--ease-out),
+    background 200ms var(--ease-out);
+}
+
+.trend-switch__option:hover {
+  color: var(--bone-200);
+  border-color: color-mix(in oklab, var(--bone-100) 24%, transparent);
+}
+
+.trend-switch__option--active {
+  color: var(--ink-000);
+  background: var(--bone-200);
+  border-color: var(--bone-200);
+}
+
+.trend-scale {
+  display: grid;
+  gap: 0.3rem;
+  max-width: min(520px, 52vw);
+}
+
+.trend-scale__bar {
+  height: 6px;
+  border-radius: 3px;
+  border: 1px solid color-mix(in oklab, var(--bone-100) 12%, transparent);
+}
+
+.trend-scale__ends {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bone-400);
+}
+
+.trend-scale__note {
+  margin: 0;
+  color: var(--bone-600);
+  text-transform: none;
+  letter-spacing: 0.04em;
+  font-size: 0.5625rem;
+  text-wrap: pretty;
+}
+
+.focus-card__readout {
+  color: var(--accent);
 }
 
 .legend {

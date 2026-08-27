@@ -2,9 +2,7 @@ import { HandPreview } from "./HandPreview";
 import type { CameraDevice } from "../../adapters/camera";
 import { STAGE_LABELS, type HandFrame } from "../../adapters/HandInteractionSource";
 import { EXHIBIT_CONFIG } from "../../domain/config";
-
-export type HandStatus =
-  { kind: "off" } | { kind: "loading" } | { kind: "ready" } | { kind: "error"; message: string };
+import type { HandStatus } from "../../hooks/useHandTracking";
 
 type Props = {
   open: boolean;

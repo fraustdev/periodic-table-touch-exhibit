@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import { elements, getElement } from "../../data/elements";
 import { toCssRow } from "../../domain/elementLayout";
 import { getCategoryColor, getCategoryLabel } from "../../policy/categoryColors";
+import { NO_DATA_COLOR } from "../../policy/trends";
 import type { InteractionState } from "../../domain/interaction";
 import type { ElementRecord } from "../../domain/types";
 
@@ -13,7 +14,13 @@ const PERIODS = [1, 2, 3, 4, 5, 6, 7];
  * on a cell hides the cell and everything just below it; this readout sits
  * where a hand cannot cover it.
  */
-function FocusCard({ element }: { element: ElementRecord | null }) {
+function FocusCard({
+  element,
+  readout,
+}: {
+  element: ElementRecord | null;
+  readout?: string | null;
+}) {
   if (!element) {
     return (
       <div className="focus-card focus-card--idle" key="idle" aria-hidden="true">
@@ -36,6 +43,7 @@ function FocusCard({ element }: { element: ElementRecord | null }) {
         <span className="eyebrow">{element.atomicMass} u</span>
         <span className="eyebrow">{getCategoryLabel(element.category)}</span>
         <span className="eyebrow">{element.phase}</span>
+        {readout && <span className="eyebrow focus-card__readout">{readout}</span>}
       </div>
       <p className="focus-card__blurb">{element.blurb}</p>
     </div>
@@ -48,6 +56,17 @@ const F_BLOCK_STANDINS = [
 ];
 
 type Props = {
+  /**
+   * Colour for a cell. Defaults to its chemical family; a trend overlay swaps
+   * in a position on a measured scale without this component knowing which.
+   */
+  colorFor?: (element: ElementRecord) => string;
+  /** Legible text colour for a cell whose fill may be bright. */
+  inkFor?: (element: ElementRecord) => string;
+  /** Extra line under the focus card, e.g. the active trend's value. */
+  readoutFor?: (element: ElementRecord) => string | null;
+  /** True while a trend is active, so non-element cells stop implying a family. */
+  trendActive?: boolean;
   interaction: InteractionState;
   /** Bumped on every confirmation so the strike animation re-runs. */
   confirmToken: number;
@@ -59,9 +78,10 @@ type Props = {
  * testing, no gesture rules, no knowledge of where the pointer came from.
  */
 export const PeriodicTable = forwardRef<HTMLDivElement, Props>(function PeriodicTable(
-  { interaction, confirmToken, showReticle },
+  { interaction, confirmToken, showReticle, colorFor, inkFor, readoutFor, trendActive = false },
   ref,
 ) {
+  const cellColor = colorFor ?? ((element: ElementRecord) => getCategoryColor(element.category));
   const { hovered, selected, phase, point, source } = interaction;
   const focus = hovered ?? selected;
   const focusElement = focus === null ? null : (getElement(focus) ?? null);
@@ -87,7 +107,10 @@ export const PeriodicTable = forwardRef<HTMLDivElement, Props>(function Periodic
         role="group"
         aria-label="Periodic table of the elements"
       >
-        <FocusCard element={focusElement} />
+        <FocusCard
+          element={focusElement}
+          readout={focusElement ? readoutFor?.(focusElement) : null}
+        />
 
         {/* Conventional f-block stand-ins, so the main block reads correctly. */}
         {F_BLOCK_STANDINS.map((standin) => (
@@ -98,7 +121,7 @@ export const PeriodicTable = forwardRef<HTMLDivElement, Props>(function Periodic
               {
                 gridColumn: 3,
                 gridRow: standin.row,
-                "--cat": getCategoryColor(standin.category),
+                "--cat": trendActive ? NO_DATA_COLOR : getCategoryColor(standin.category),
               } as React.CSSProperties
             }
             aria-hidden="true"
@@ -121,6 +144,7 @@ export const PeriodicTable = forwardRef<HTMLDivElement, Props>(function Periodic
 
           const className = [
             "cell",
+            trendActive && "cell--trend",
             isHovered && "cell--hovered",
             isSelected && "cell--selected",
             isConfirmed && "cell--confirmed",
@@ -138,7 +162,8 @@ export const PeriodicTable = forwardRef<HTMLDivElement, Props>(function Periodic
                 {
                   gridColumn: element.gridColumn,
                   gridRow: toCssRow(element.gridRow),
-                  "--cat": getCategoryColor(element.category),
+                  "--cat": cellColor(element),
+                  ...(inkFor ? { "--cat-ink": inkFor(element) } : {}),
                 } as React.CSSProperties
               }
               data-symbol={element.symbol}
