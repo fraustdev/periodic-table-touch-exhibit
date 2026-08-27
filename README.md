@@ -27,7 +27,8 @@ replaces this with its value as a hero number and a marker showing where it fall
 ```bash
 npm install
 npm run dev          # http://localhost:5173/table  and  /info
-npm test             # 131 tests
+npm test             # 135 unit tests
+npm run verify       # everything: format, types, tests, build, and 9 browser checks
 npm run build
 ```
 

@@ -119,6 +119,10 @@ it, renders leak between tests.
 a video element and its overlay canvas have different aspect ratios. That exact bug shipped and was
 only caught by measuring both boxes in a real browser.
 
+Run `npm run verify:browser` (9 checks, ~30s, needs a dev server) or `npm run verify` for everything.
+**Add a check there when you fix a bug a unit test could not have caught** — that is what keeps the
+suite worth running.
+
 ## Traps that have already cost time
 
 - **MediaPipe requires WebGL even with the CPU delegate.** It uploads each frame as a GL texture.
@@ -136,6 +140,9 @@ only caught by measuring both boxes in a real browser.
   grid row so the table gives up space instead.
 - **Never run `npm install` before this directory has a `package.json`** — npm walks up and installs
   into the nearest ancestor manifest.
+- **In Playwright, `browser.newPage()` creates a fresh context each time**, and `BroadcastChannel`
+  does not cross contexts — the same reason two Chrome profiles cannot talk. Two displays opened that
+  way silently never sync. Share one `context.newPage()`.
 
 ## Conventions
 

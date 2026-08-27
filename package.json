@@ -13,7 +13,9 @@
     "postinstall": "node scripts/vendor-mediapipe.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "leds:demo": "node scripts/led-frame-demo.ts"
+    "leds:demo": "node scripts/led-frame-demo.ts",
+    "verify:browser": "node scripts/verify-browser.mjs",
+    "verify": "npm run format:check && tsc --noEmit && vitest --run && vite build && npm run verify:browser"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^1.0.1",
@@ -27,6 +29,7 @@
     "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react": "^6.1.0",
     "jsdom": "^30.0.1",
+    "playwright-core": "^1.62.1",
     "prettier": "^3.9.6",
     "typescript": "^7.0.2",
     "vite": "^8.2.2",

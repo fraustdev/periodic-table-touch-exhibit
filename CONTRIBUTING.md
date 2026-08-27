@@ -16,10 +16,18 @@ a manually opened window in a different Chrome instance will never connect.
 The mouse works immediately. Hand tracking is optional and lives behind the Setup drawer.
 
 ```bash
-npm test             # 73 tests
+npm test             # 135 unit tests
 npm run build        # typecheck + production build
 npm run format       # Prettier, enforced in CI
+
+npm run verify:browser   # 9 browser checks against a running dev server
+npm run verify           # everything: format, types, tests, build, browser
 ```
+
+`npm run verify` is the one command that answers "does this actually work". It ends with a browser
+pass that unit tests cannot do — sweeping all 118 cells against a live second window, measuring that
+no interface element covers a cell at four viewport sizes, and confirming the exhibit still works
+with WebGL removed. Run it before you claim anything is done.
 
 ## The one idea worth understanding
 
@@ -76,7 +84,10 @@ device, add it to that test. If they diverge, the drivers have started to drift.
 
 **For anything visual or geometric, verify in a real browser.** Unit tests can't tell you an overlay
 is misaligned with its video. That bug shipped here, and was only caught by measuring both elements'
-bounding boxes in a live page.
+bounding boxes in a live page — which is now `npm run verify:browser`, so the knowledge of _what to
+check_ is committed rather than living in someone's head.
+
+`HEADED=1 npm run verify:browser` runs it visibly if you want to watch.
 
 ## Making a change
 
