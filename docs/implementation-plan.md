@@ -66,6 +66,7 @@ src/test/setup.ts                         Testing Library matchers
 ### Task 1: Application shell and route boundary
 
 **Files:**
+
 - Create: `package.json`
 - Create: `tsconfig.json`
 - Create: `vite.config.ts`
@@ -77,6 +78,7 @@ src/test/setup.ts                         Testing Library matchers
 - Create: `src/styles/global.css`
 
 **Interfaces:**
+
 - Produces: `App({ path?: string }): JSX.Element`, stable `/table` and `/info` route shells, `npm run dev`, `npm test`, and `npm run build`.
 
 - [ ] **Step 1: Install the application and test dependencies**
@@ -233,10 +235,24 @@ Create `index.html`:
 Create `src/styles/global.css`:
 
 ```css
-:root { color: #f4efe6; background: #080b10; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
-* { box-sizing: border-box; }
-html, body, #root { min-height: 100%; margin: 0; }
-button, input { font: inherit; }
+:root {
+  color: #f4efe6;
+  background: #080b10;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+button,
+input {
+  font: inherit;
+}
 ```
 
 - [ ] **Step 6: Verify and commit the route shell**
@@ -257,6 +273,7 @@ Expected: 3 route tests pass; TypeScript and Vite build succeed.
 ### Task 2: Local element dataset, layout, and category policy
 
 **Files:**
+
 - Create: `scripts/fetch-elements.mjs`
 - Create: `src/domain/types.ts`
 - Create: `src/domain/elementLayout.ts`
@@ -268,6 +285,7 @@ Expected: 3 route tests pass; TypeScript and Vite build succeed.
 - Create: `src/policy/categoryColors.test.ts`
 
 **Interfaces:**
+
 - Produces: `ElementRecord`, `elements`, `getElement(atomicNumber)`, `getElementPosition(atomicNumber)`, `hitTestElement(point)`, `CATEGORY_COLORS`, and `getCategoryColor(category)`.
 - Consumes: PubChem’s one-request periodic-table JSON endpoint only during dataset generation; the shipped app reads local JSON only.
 
@@ -277,9 +295,17 @@ Create `src/domain/types.ts`:
 
 ```ts
 export type ElementCategory =
-  | "alkali-metal" | "alkaline-earth-metal" | "transition-metal"
-  | "post-transition-metal" | "metalloid" | "nonmetal" | "halogen"
-  | "noble-gas" | "lanthanide" | "actinide" | "unknown";
+  | "alkali-metal"
+  | "alkaline-earth-metal"
+  | "transition-metal"
+  | "post-transition-metal"
+  | "metalloid"
+  | "nonmetal"
+  | "halogen"
+  | "noble-gas"
+  | "lanthanide"
+  | "actinide"
+  | "unknown";
 
 export type Point = { x: number; y: number };
 export type GridPosition = { row: number; column: number };
@@ -333,7 +359,9 @@ describe("element data", () => {
   });
 
   it("provides portfolio copy for every element", () => {
-    expect(elements.every((element) => element.blurb.length > 10 && element.funFact.length > 10)).toBe(true);
+    expect(
+      elements.every((element) => element.blurb.length > 10 && element.funFact.length > 10),
+    ).toBe(true);
   });
 });
 ```
@@ -368,7 +396,8 @@ import { getCategoryColor } from "./categoryColors";
 
 describe("category color policy", () => {
   it("maps every dataset category to a CSS hex color", () => {
-    for (const element of elements) expect(getCategoryColor(element.category)).toMatch(/^#[0-9a-f]{6}$/i);
+    for (const element of elements)
+      expect(getCategoryColor(element.category)).toMatch(/^#[0-9a-f]{6}$/i);
   });
 });
 ```
@@ -452,20 +481,33 @@ import { mkdir, writeFile } from "node:fs/promises";
 
 const sourceUrl = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/periodictable/JSON";
 const categoryMap = new Map([
-  ["Alkali metal", "alkali-metal"], ["Alkaline earth metal", "alkaline-earth-metal"],
-  ["Transition metal", "transition-metal"], ["Post-transition metal", "post-transition-metal"],
-  ["Metalloid", "metalloid"], ["Nonmetal", "nonmetal"], ["Halogen", "halogen"],
-  ["Noble gas", "noble-gas"], ["Lanthanide", "lanthanide"], ["Actinide", "actinide"],
+  ["Alkali metal", "alkali-metal"],
+  ["Alkaline earth metal", "alkaline-earth-metal"],
+  ["Transition metal", "transition-metal"],
+  ["Post-transition metal", "post-transition-metal"],
+  ["Metalloid", "metalloid"],
+  ["Nonmetal", "nonmetal"],
+  ["Halogen", "halogen"],
+  ["Noble gas", "noble-gas"],
+  ["Lanthanide", "lanthanide"],
+  ["Actinide", "actinide"],
 ]);
 
 function position(n) {
-  if (n === 1) return [1, 1]; if (n === 2) return [1, 18];
-  if (n <= 4) return [2, n - 2]; if (n <= 10) return [2, n + 8];
-  if (n <= 12) return [3, n - 10]; if (n <= 18) return [3, n];
-  if (n <= 36) return [4, n - 18]; if (n <= 54) return [5, n - 36];
-  if (n <= 56) return [6, n - 54]; if (n <= 71) return [8, n - 54];
-  if (n <= 86) return [6, n - 68]; if (n <= 88) return [7, n - 86];
-  if (n <= 103) return [9, n - 86]; return [7, n - 100];
+  if (n === 1) return [1, 1];
+  if (n === 2) return [1, 18];
+  if (n <= 4) return [2, n - 2];
+  if (n <= 10) return [2, n + 8];
+  if (n <= 12) return [3, n - 10];
+  if (n <= 18) return [3, n];
+  if (n <= 36) return [4, n - 18];
+  if (n <= 54) return [5, n - 36];
+  if (n <= 56) return [6, n - 54];
+  if (n <= 71) return [8, n - 54];
+  if (n <= 86) return [6, n - 68];
+  if (n <= 88) return [7, n - 86];
+  if (n <= 103) return [9, n - 86];
+  return [7, n - 100];
 }
 
 const response = await fetch(sourceUrl);
@@ -477,11 +519,22 @@ const elements = payload.Table.Row.map(({ Cell: cell }) => {
   const groupBlock = cell[15] || "Unknown category";
   const category = categoryMap.get(groupBlock) ?? "unknown";
   const state = cell[11] ? cell[11].toLowerCase() : "not assigned";
-  const discovery = cell[16] === "Ancient" ? "Known to people since ancient times." : cell[16] ? `First identified in ${cell[16]}.` : "Its discovery date has not been assigned.";
+  const discovery =
+    cell[16] === "Ancient"
+      ? "Known to people since ancient times."
+      : cell[16]
+        ? `First identified in ${cell[16]}.`
+        : "Its discovery date has not been assigned.";
   return {
-    atomicNumber, symbol: cell[1], name: cell[2], atomicMass: cell[3], category,
+    atomicNumber,
+    symbol: cell[1],
+    name: cell[2],
+    atomicMass: cell[3],
+    category,
     blurb: `${cell[2]} is classified as ${groupBlock.toLowerCase()}. Its standard state is ${state}.`,
-    funFact: discovery, gridRow, gridColumn,
+    funFact: discovery,
+    gridRow,
+    gridColumn,
   };
 });
 if (elements.length !== 118) throw new Error(`Expected 118 elements, received ${elements.length}`);
@@ -525,6 +578,7 @@ Expected: all data/layout/color tests pass and the build succeeds.
 ### Task 3: Event transport and information display
 
 **Files:**
+
 - Create: `src/domain/config.ts`
 - Create: `src/adapters/BrowserEventBus.ts`
 - Create: `src/adapters/BrowserEventBus.test.ts`
@@ -535,6 +589,7 @@ Expected: all data/layout/color tests pass and the build succeeds.
 - Modify: `src/styles/global.css`
 
 **Interfaces:**
+
 - Produces: `BrowserEventBus`, `isExhibitEvent(value)`, `useExhibitEventBus(onEvent)`, and `InfoDisplay`.
 - Consumes: `ExhibitEvent`, `getElement`, and `getCategoryColor` from Task 2.
 
@@ -553,7 +608,9 @@ function fakeChannel(): ChannelLike {
 describe("BrowserEventBus", () => {
   it("validates the stable contracts", () => {
     expect(isExhibitEvent({ type: "elementSelected", atomicNumber: 79, timestamp: 10 })).toBe(true);
-    expect(isExhibitEvent({ type: "lightsPulse", category: "noble-gas", intensity: 0.8 })).toBe(true);
+    expect(isExhibitEvent({ type: "lightsPulse", category: "noble-gas", intensity: 0.8 })).toBe(
+      true,
+    );
     expect(isExhibitEvent({ type: "elementSelected", atomicNumber: 0, timestamp: 10 })).toBe(false);
     expect(isExhibitEvent({ type: "lightsPulse", category: "laser", intensity: 2 })).toBe(false);
   });
@@ -626,10 +683,21 @@ export function isExhibitEvent(value: unknown): value is ExhibitEvent {
   if (!value || typeof value !== "object") return false;
   const event = value as Record<string, unknown>;
   if (event.type === "elementSelected") {
-    return Number.isInteger(event.atomicNumber) && Number(event.atomicNumber) >= 1 && Number(event.atomicNumber) <= 118 && Number.isFinite(event.timestamp);
+    return (
+      Number.isInteger(event.atomicNumber) &&
+      Number(event.atomicNumber) >= 1 &&
+      Number(event.atomicNumber) <= 118 &&
+      Number.isFinite(event.timestamp)
+    );
   }
   if (event.type === "lightsPulse") {
-    return typeof event.category === "string" && event.category in CATEGORY_COLORS && typeof event.intensity === "number" && event.intensity >= 0 && event.intensity <= 1;
+    return (
+      typeof event.category === "string" &&
+      event.category in CATEGORY_COLORS &&
+      typeof event.intensity === "number" &&
+      event.intensity >= 0 &&
+      event.intensity <= 1
+    );
   }
   return false;
 }
@@ -638,16 +706,28 @@ export class BrowserEventBus {
   private listeners = new Set<(event: ExhibitEvent) => void>();
 
   constructor(private channel: ChannelLike) {
-    channel.onmessage = ({ data }) => { if (isExhibitEvent(data)) this.emit(data); };
+    channel.onmessage = ({ data }) => {
+      if (isExhibitEvent(data)) this.emit(data);
+    };
   }
 
-  publish(event: ExhibitEvent) { this.emit(event); this.channel.postMessage(event); }
+  publish(event: ExhibitEvent) {
+    this.emit(event);
+    this.channel.postMessage(event);
+  }
   subscribe(listener: (event: ExhibitEvent) => void) {
     this.listeners.add(listener);
-    return () => { this.listeners.delete(listener); };
+    return () => {
+      this.listeners.delete(listener);
+    };
   }
-  close() { this.channel.close(); this.listeners.clear(); }
-  private emit(event: ExhibitEvent) { for (const listener of this.listeners) listener(event); }
+  close() {
+    this.channel.close();
+    this.listeners.clear();
+  }
+  private emit(event: ExhibitEvent) {
+    for (const listener of this.listeners) listener(event);
+  }
 }
 ```
 
@@ -674,17 +754,33 @@ import { getCategoryColor } from "../../policy/categoryColors";
 
 export function InfoDisplay({ selectedAtomicNumber }: { selectedAtomicNumber: number | null }) {
   const element = selectedAtomicNumber ? getElement(selectedAtomicNumber) : undefined;
-  if (!element) return <main className="info-display info-attract" aria-label="Element information display"><p>Choose an element at the table</p></main>;
+  if (!element)
+    return (
+      <main className="info-display info-attract" aria-label="Element information display">
+        <p>Choose an element at the table</p>
+      </main>
+    );
   const accent = getCategoryColor(element.category);
   return (
-    <main className="info-display" aria-label="Element information display" style={{ "--accent": accent } as CSSProperties}>
+    <main
+      className="info-display"
+      aria-label="Element information display"
+      style={{ "--accent": accent } as CSSProperties}
+    >
       <article className="element-portrait" key={element.atomicNumber}>
         <p className="element-kicker">Element {element.atomicNumber}</p>
-        <div className="element-symbol" aria-hidden="true">{element.symbol}</div>
+        <div className="element-symbol" aria-hidden="true">
+          {element.symbol}
+        </div>
         <h1>{element.name}</h1>
         <p className="element-category">{element.category.replaceAll("-", " ")}</p>
         <p className="element-blurb">{element.blurb}</p>
-        <dl><div><dt>Atomic mass</dt><dd>{element.atomicMass}</dd></div></dl>
+        <dl>
+          <div>
+            <dt>Atomic mass</dt>
+            <dd>{element.atomicMass}</dd>
+          </div>
+        </dl>
         <p className="element-fact">{element.funFact}</p>
       </article>
     </main>
@@ -739,6 +835,7 @@ Expected: contract, receiver, and route tests pass; build succeeds.
 ### Task 4: Pure interaction controller and mouse-complete table
 
 **Files:**
+
 - Create: `src/domain/interaction.ts`
 - Create: `src/domain/interaction.test.ts`
 - Create: `src/adapters/MouseInteractionSource.ts`
@@ -750,6 +847,7 @@ Expected: contract, receiver, and route tests pass; build succeeds.
 - Modify: `src/styles/global.css`
 
 **Interfaces:**
+
 - Produces: `InteractionState`, `PointerSample`, `createInteractionState()`, `stepInteraction(state, sample)`, `MouseInteractionSource`, and a complete mouse-driven `/table` route.
 - Consumes: `hitTestElement`, `elements`, `BrowserEventBus`, and category colors.
 
@@ -761,7 +859,16 @@ Create `src/domain/interaction.test.ts` with cases for hover, mouse confirmation
 import { describe, expect, it } from "vitest";
 import { createInteractionState, stepInteraction } from "./interaction";
 
-const hand = (pinchRatio: number, timestamp: number) => ({ x: 0.01, y: 0.01, source: "hand" as const, tracked: true, confidence: 0.9, pinchRatio, confirm: false, timestamp });
+const hand = (pinchRatio: number, timestamp: number) => ({
+  x: 0.01,
+  y: 0.01,
+  source: "hand" as const,
+  tracked: true,
+  confidence: 0.9,
+  pinchRatio,
+  confirm: false,
+  timestamp,
+});
 
 describe("interaction controller", () => {
   it("hovers then confirms on a pinch edge", () => {
@@ -784,8 +891,24 @@ describe("interaction controller", () => {
   });
 
   it("uses the same path for mouse confirmation and clears hover on tracking loss", () => {
-    const mouse = stepInteraction(createInteractionState(), { x: 0.01, y: 0.01, source: "mouse", tracked: true, confidence: 1, confirm: true, timestamp: 0 });
-    const lost = stepInteraction(mouse.state, { x: 0, y: 0, source: "hand", tracked: false, confidence: 0, confirm: false, timestamp: 10 });
+    const mouse = stepInteraction(createInteractionState(), {
+      x: 0.01,
+      y: 0.01,
+      source: "mouse",
+      tracked: true,
+      confidence: 1,
+      confirm: true,
+      timestamp: 0,
+    });
+    const lost = stepInteraction(mouse.state, {
+      x: 0,
+      y: 0,
+      source: "hand",
+      tracked: false,
+      confidence: 0,
+      confirm: false,
+      timestamp: 10,
+    });
     expect(mouse.event?.atomicNumber).toBe(1);
     expect(lost.state.hoveredAtomicNumber).toBeUndefined();
   });
@@ -805,7 +928,10 @@ describe("PeriodicTable", () => {
   it("renders every element as an accessible cell", () => {
     render(<PeriodicTable ref={createRef<HTMLDivElement>()} state={createInteractionState()} />);
     expect(screen.getAllByRole("button", { name: /atomic number/i })).toHaveLength(118);
-    expect(screen.getByRole("button", { name: /hydrogen, atomic number 1/i })).toHaveAttribute("data-phase", "rest");
+    expect(screen.getByRole("button", { name: /hydrogen, atomic number 1/i })).toHaveAttribute(
+      "data-phase",
+      "rest",
+    );
   });
 });
 ```
@@ -822,27 +948,85 @@ Create `src/domain/interaction.ts`:
 
 ```ts
 import { hitTestElement } from "./elementLayout";
-import { MIN_TRACKING_CONFIDENCE, PINCH_ENGAGE, PINCH_RELEASE, SAME_CELL_DEBOUNCE_MS } from "./config";
+import {
+  MIN_TRACKING_CONFIDENCE,
+  PINCH_ENGAGE,
+  PINCH_RELEASE,
+  SAME_CELL_DEBOUNCE_MS,
+} from "./config";
 import type { ElementSelectedEvent } from "./types";
 
-export type PointerSample = { x: number; y: number; source: "mouse" | "hand"; tracked: boolean; confidence: number; pinchRatio?: number; confirm: boolean; timestamp: number };
-export type InteractionState = { phase: "idle" | "hover" | "armed" | "confirmed" | "cooldown"; hoveredAtomicNumber?: number; selectedAtomicNumber?: number; selectedAt?: number; pinchEngaged: boolean };
+export type PointerSample = {
+  x: number;
+  y: number;
+  source: "mouse" | "hand";
+  tracked: boolean;
+  confidence: number;
+  pinchRatio?: number;
+  confirm: boolean;
+  timestamp: number;
+};
+export type InteractionState = {
+  phase: "idle" | "hover" | "armed" | "confirmed" | "cooldown";
+  hoveredAtomicNumber?: number;
+  selectedAtomicNumber?: number;
+  selectedAt?: number;
+  pinchEngaged: boolean;
+};
 
-export function createInteractionState(): InteractionState { return { phase: "idle", pinchEngaged: false }; }
+export function createInteractionState(): InteractionState {
+  return { phase: "idle", pinchEngaged: false };
+}
 
-export function stepInteraction(state: InteractionState, sample: PointerSample): { state: InteractionState; event?: ElementSelectedEvent } {
-  if (!sample.tracked || sample.confidence < MIN_TRACKING_CONFIDENCE) return { state: { ...state, phase: "idle", hoveredAtomicNumber: undefined, pinchEngaged: false } };
+export function stepInteraction(
+  state: InteractionState,
+  sample: PointerSample,
+): { state: InteractionState; event?: ElementSelectedEvent } {
+  if (!sample.tracked || sample.confidence < MIN_TRACKING_CONFIDENCE)
+    return {
+      state: { ...state, phase: "idle", hoveredAtomicNumber: undefined, pinchEngaged: false },
+    };
   const hoveredAtomicNumber = hitTestElement(sample);
-  const released = sample.source === "hand" && sample.pinchRatio !== undefined && sample.pinchRatio >= PINCH_RELEASE;
-  const pinchEdge = sample.source === "hand" && sample.pinchRatio !== undefined && sample.pinchRatio <= PINCH_ENGAGE && !state.pinchEngaged;
+  const released =
+    sample.source === "hand" &&
+    sample.pinchRatio !== undefined &&
+    sample.pinchRatio >= PINCH_RELEASE;
+  const pinchEdge =
+    sample.source === "hand" &&
+    sample.pinchRatio !== undefined &&
+    sample.pinchRatio <= PINCH_ENGAGE &&
+    !state.pinchEngaged;
   const pinchEngaged = released ? false : state.pinchEngaged || pinchEdge;
   const confirm = sample.confirm || pinchEdge;
-  const blocked = hoveredAtomicNumber === state.selectedAtomicNumber && state.selectedAt !== undefined && sample.timestamp - state.selectedAt < SAME_CELL_DEBOUNCE_MS;
+  const blocked =
+    hoveredAtomicNumber === state.selectedAtomicNumber &&
+    state.selectedAt !== undefined &&
+    sample.timestamp - state.selectedAt < SAME_CELL_DEBOUNCE_MS;
   if (hoveredAtomicNumber && confirm && !blocked) {
-    const event = { type: "elementSelected", atomicNumber: hoveredAtomicNumber, timestamp: sample.timestamp } as const;
-    return { state: { phase: "confirmed", hoveredAtomicNumber, selectedAtomicNumber: hoveredAtomicNumber, selectedAt: sample.timestamp, pinchEngaged }, event };
+    const event = {
+      type: "elementSelected",
+      atomicNumber: hoveredAtomicNumber,
+      timestamp: sample.timestamp,
+    } as const;
+    return {
+      state: {
+        phase: "confirmed",
+        hoveredAtomicNumber,
+        selectedAtomicNumber: hoveredAtomicNumber,
+        selectedAt: sample.timestamp,
+        pinchEngaged,
+      },
+      event,
+    };
   }
-  return { state: { ...state, phase: blocked ? "cooldown" : pinchEngaged ? "armed" : hoveredAtomicNumber ? "hover" : "idle", hoveredAtomicNumber, pinchEngaged } };
+  return {
+    state: {
+      ...state,
+      phase: blocked ? "cooldown" : pinchEngaged ? "armed" : hoveredAtomicNumber ? "hover" : "idle",
+      hoveredAtomicNumber,
+      pinchEngaged,
+    },
+  };
 }
 ```
 
@@ -860,10 +1044,20 @@ export class MouseInteractionSource {
   start(element: HTMLElement, listener: (sample: PointerSample) => void) {
     const emit = (event: PointerEvent, confirm: boolean) => {
       const rect = element.getBoundingClientRect();
-      listener({ x: (event.clientX - rect.left) / rect.width, y: (event.clientY - rect.top) / rect.height, source: "mouse", tracked: true, confidence: 1, confirm, timestamp: performance.now() });
+      listener({
+        x: (event.clientX - rect.left) / rect.width,
+        y: (event.clientY - rect.top) / rect.height,
+        source: "mouse",
+        tracked: true,
+        confidence: 1,
+        confirm,
+        timestamp: performance.now(),
+      });
     };
     this.onMove = (event) => emit(event, false);
-    this.onDown = (event) => { if (event.button === 0) emit(event, true); };
+    this.onDown = (event) => {
+      if (event.button === 0) emit(event, true);
+    };
     element.addEventListener("pointermove", this.onMove);
     element.addEventListener("pointerdown", this.onDown);
   }
@@ -886,7 +1080,10 @@ import { getCategoryColor } from "../../policy/categoryColors";
 
 type PeriodicTableProps = { state: InteractionState; handPoint?: Point };
 
-export const PeriodicTable = forwardRef<HTMLDivElement, PeriodicTableProps>(function PeriodicTable({ state, handPoint }, ref) {
+export const PeriodicTable = forwardRef<HTMLDivElement, PeriodicTableProps>(function PeriodicTable(
+  { state, handPoint },
+  ref,
+) {
   return (
     <div className="periodic-table" ref={ref}>
       {elements.map((element) => {
@@ -911,7 +1108,12 @@ export const PeriodicTable = forwardRef<HTMLDivElement, PeriodicTableProps>(func
           </button>
         );
       })}
-      {handPoint ? <span className="hand-cursor" style={{ left: `${handPoint.x * 100}%`, top: `${handPoint.y * 100}%` }} /> : null}
+      {handPoint ? (
+        <span
+          className="hand-cursor"
+          style={{ left: `${handPoint.x * 100}%`, top: `${handPoint.y * 100}%` }}
+        />
+      ) : null}
     </div>
   );
 });
@@ -926,7 +1128,15 @@ import { getCategoryColor } from "../../policy/categoryColors";
 
 export function VirtualLights({ cue, pulseId }: { cue: LightCue | null; pulseId: number }) {
   const accent = cue ? getCategoryColor(cue.category) : "#6b7280";
-  return <div key={pulseId} className="virtual-lights" data-pulsing={Boolean(cue)} style={{ "--accent": accent } as CSSProperties} aria-hidden="true" />;
+  return (
+    <div
+      key={pulseId}
+      className="virtual-lights"
+      data-pulsing={Boolean(cue)}
+      style={{ "--accent": accent } as CSSProperties}
+      aria-hidden="true"
+    />
+  );
 }
 ```
 
@@ -936,7 +1146,12 @@ Create `src/ui/table/TableDisplay.tsx`:
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MouseInteractionSource } from "../../adapters/MouseInteractionSource";
 import type { BrowserEventBus } from "../../adapters/BrowserEventBus";
-import { createInteractionState, stepInteraction, type InteractionState, type PointerSample } from "../../domain/interaction";
+import {
+  createInteractionState,
+  stepInteraction,
+  type InteractionState,
+  type PointerSample,
+} from "../../domain/interaction";
 import type { LightCue, Point } from "../../domain/types";
 import { getElement } from "../../data/elements";
 import { PeriodicTable } from "./PeriodicTable";
@@ -950,23 +1165,32 @@ export function TableDisplay({ bus }: { bus: BrowserEventBus }) {
   const [lightCue, setLightCue] = useState<LightCue | null>(null);
   const [pulseId, setPulseId] = useState(0);
 
-  const handleSample = useCallback((sample: PointerSample) => {
-    const result = stepInteraction(stateRef.current, sample);
-    stateRef.current = result.state;
-    setState(result.state);
-    setHandPoint(sample.source === "hand" && sample.tracked ? { x: sample.x, y: sample.y } : undefined);
-    if (!result.event) return;
-    const element = getElement(result.event.atomicNumber)!;
-    bus.publish(result.event);
-    bus.publish({ type: "lightsPulse", category: element.category, intensity: 1 });
-  }, [bus]);
+  const handleSample = useCallback(
+    (sample: PointerSample) => {
+      const result = stepInteraction(stateRef.current, sample);
+      stateRef.current = result.state;
+      setState(result.state);
+      setHandPoint(
+        sample.source === "hand" && sample.tracked ? { x: sample.x, y: sample.y } : undefined,
+      );
+      if (!result.event) return;
+      const element = getElement(result.event.atomicNumber)!;
+      bus.publish(result.event);
+      bus.publish({ type: "lightsPulse", category: element.category, intensity: 1 });
+    },
+    [bus],
+  );
 
-  useEffect(() => bus.subscribe((event) => {
-    if (event.type === "lightsPulse") {
-      setLightCue(event);
-      setPulseId((value) => value + 1);
-    }
-  }), [bus]);
+  useEffect(
+    () =>
+      bus.subscribe((event) => {
+        if (event.type === "lightsPulse") {
+          setLightCue(event);
+          setPulseId((value) => value + 1);
+        }
+      }),
+    [bus],
+  );
 
   useEffect(() => {
     const element = tableRef.current;
@@ -993,16 +1217,67 @@ Attach no independent `onClick` handlers to cells. In `App.tsx`, render `<TableD
 In `src/styles/global.css`, add:
 
 ```css
-.table-display { min-height: 100vh; padding: 2.5rem; background: radial-gradient(circle at 50% 40%, #141b27, #07090d 70%); overflow: hidden; }
-.periodic-table { position: relative; display: grid; grid-template-columns: repeat(18, minmax(0, 1fr)); grid-template-rows: repeat(9, minmax(0, 1fr)); gap: clamp(3px, .45vw, 10px); aspect-ratio: 18 / 9; }
-.element-cell { border: 1px solid color-mix(in srgb, var(--accent) 38%, transparent); background: #111722; color: #f4efe6; border-radius: .55rem; transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease; }
-.element-cell[data-phase="hover"] { transform: translateY(-4px); box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 52%, transparent); }
-.element-cell[data-phase="armed"] { transform: scale(.96); background: color-mix(in srgb, var(--accent) 24%, #111722); }
-.element-cell[data-phase="confirmed"] { animation: confirm-cell 380ms ease; }
-.virtual-lights { position: fixed; inset: 1rem; pointer-events: none; border: 2px solid color-mix(in srgb, var(--accent, #6b7280) 30%, transparent); border-radius: 1.5rem; }
-.virtual-lights[data-pulsing="true"] { animation: light-pulse 900ms ease-out; }
-@keyframes confirm-cell { 45% { transform: scale(.9); } 70% { box-shadow: 0 0 38px var(--accent); } }
-@keyframes light-pulse { 35% { border-color: var(--accent); box-shadow: inset 0 0 42px var(--accent), 0 0 34px var(--accent); } }
+.table-display {
+  min-height: 100vh;
+  padding: 2.5rem;
+  background: radial-gradient(circle at 50% 40%, #141b27, #07090d 70%);
+  overflow: hidden;
+}
+.periodic-table {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(18, minmax(0, 1fr));
+  grid-template-rows: repeat(9, minmax(0, 1fr));
+  gap: clamp(3px, 0.45vw, 10px);
+  aspect-ratio: 18 / 9;
+}
+.element-cell {
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, transparent);
+  background: #111722;
+  color: #f4efe6;
+  border-radius: 0.55rem;
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    background 140ms ease;
+}
+.element-cell[data-phase="hover"] {
+  transform: translateY(-4px);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 52%, transparent);
+}
+.element-cell[data-phase="armed"] {
+  transform: scale(0.96);
+  background: color-mix(in srgb, var(--accent) 24%, #111722);
+}
+.element-cell[data-phase="confirmed"] {
+  animation: confirm-cell 380ms ease;
+}
+.virtual-lights {
+  position: fixed;
+  inset: 1rem;
+  pointer-events: none;
+  border: 2px solid color-mix(in srgb, var(--accent, #6b7280) 30%, transparent);
+  border-radius: 1.5rem;
+}
+.virtual-lights[data-pulsing="true"] {
+  animation: light-pulse 900ms ease-out;
+}
+@keyframes confirm-cell {
+  45% {
+    transform: scale(0.9);
+  }
+  70% {
+    box-shadow: 0 0 38px var(--accent);
+  }
+}
+@keyframes light-pulse {
+  35% {
+    border-color: var(--accent);
+    box-shadow:
+      inset 0 0 42px var(--accent),
+      0 0 34px var(--accent);
+  }
+}
 ```
 
 - [ ] **Step 6: Verify the mouse-complete milestone and commit**
@@ -1025,11 +1300,13 @@ Expected: the entire portfolio story works without camera permission.
 ### Task 5: Four-point calibration and persistence
 
 **Files:**
+
 - Create: `src/domain/calibration.ts`
 - Create: `src/domain/calibration.test.ts`
 - Create: `src/ui/table/SetupDrawer.tsx`
 
 **Interfaces:**
+
 - Produces: `solveHomography(sourcePoints)`, `applyHomography(transform, point)`, `saveCalibration`, `loadCalibration`, and `SetupDrawer`.
 - Consumes: raw mirrored camera-space fingertip samples from Task 6; mouse behavior remains independent.
 
@@ -1045,13 +1322,27 @@ describe("four-point calibration", () => {
   beforeEach(() => localStorage.clear());
 
   it("maps corners and center through a projective transform", () => {
-    const transform = solveHomography([{ x: .1, y: .2 }, { x: .9, y: .1 }, { x: .8, y: .9 }, { x: .2, y: .8 }]);
-    expect(applyHomography(transform, { x: .1, y: .2 })).toEqual(expect.objectContaining({ x: expect.closeTo(0, 5), y: expect.closeTo(0, 5) }));
-    expect(applyHomography(transform, { x: .8, y: .9 })).toEqual(expect.objectContaining({ x: expect.closeTo(1, 5), y: expect.closeTo(1, 5) }));
+    const transform = solveHomography([
+      { x: 0.1, y: 0.2 },
+      { x: 0.9, y: 0.1 },
+      { x: 0.8, y: 0.9 },
+      { x: 0.2, y: 0.8 },
+    ]);
+    expect(applyHomography(transform, { x: 0.1, y: 0.2 })).toEqual(
+      expect.objectContaining({ x: expect.closeTo(0, 5), y: expect.closeTo(0, 5) }),
+    );
+    expect(applyHomography(transform, { x: 0.8, y: 0.9 })).toEqual(
+      expect.objectContaining({ x: expect.closeTo(1, 5), y: expect.closeTo(1, 5) }),
+    );
   });
 
   it("loads only matching camera and viewport data", () => {
-    saveCalibration({ cameraLabel: "Demo Cam", width: 1920, height: 1080, matrix: [1, 0, 0, 0, 1, 0, 0, 0, 1] });
+    saveCalibration({
+      cameraLabel: "Demo Cam",
+      width: 1920,
+      height: 1080,
+      matrix: [1, 0, 0, 0, 1, 0, 0, 0, 1],
+    });
     expect(loadCalibration("Demo Cam", 1920, 1080)).not.toBeNull();
     expect(loadCalibration("Other Cam", 1920, 1080)).toBeNull();
   });
@@ -1071,16 +1362,28 @@ Create `src/domain/calibration.ts`:
 ```ts
 import type { Point } from "./types";
 
-export type CalibrationRecord = { cameraLabel: string; width: number; height: number; matrix: number[] };
+export type CalibrationRecord = {
+  cameraLabel: string;
+  width: number;
+  height: number;
+  matrix: number[];
+};
 const STORAGE_KEY = "periodic-table-calibration-v1";
-const targets: Point[] = [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 1, y: 1 }, { x: 0, y: 1 }];
+const targets: Point[] = [
+  { x: 0, y: 0 },
+  { x: 1, y: 0 },
+  { x: 1, y: 1 },
+  { x: 0, y: 1 },
+];
 
 function solveLinear(matrix: number[][], values: number[]) {
   const size = values.length;
   for (let column = 0; column < size; column += 1) {
     let pivot = column;
-    for (let row = column + 1; row < size; row += 1) if (Math.abs(matrix[row][column]) > Math.abs(matrix[pivot][column])) pivot = row;
-    if (Math.abs(matrix[pivot][column]) < 1e-9) throw new Error("Calibration points do not define a transform");
+    for (let row = column + 1; row < size; row += 1)
+      if (Math.abs(matrix[row][column]) > Math.abs(matrix[pivot][column])) pivot = row;
+    if (Math.abs(matrix[pivot][column]) < 1e-9)
+      throw new Error("Calibration points do not define a transform");
     [matrix[column], matrix[pivot]] = [matrix[pivot], matrix[column]];
     [values[column], values[pivot]] = [values[pivot], values[column]];
     const divisor = matrix[column][column];
@@ -1089,7 +1392,8 @@ function solveLinear(matrix: number[][], values: number[]) {
     for (let row = 0; row < size; row += 1) {
       if (row === column) continue;
       const factor = matrix[row][column];
-      for (let index = column; index < size; index += 1) matrix[row][index] -= factor * matrix[column][index];
+      for (let index = column; index < size; index += 1)
+        matrix[row][index] -= factor * matrix[column][index];
       values[row] -= factor * values[column];
     }
   }
@@ -1102,8 +1406,10 @@ export function solveHomography(source: Point[]) {
   const values: number[] = [];
   source.forEach(({ x, y }, index) => {
     const { x: u, y: v } = targets[index];
-    matrix.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); values.push(u);
-    matrix.push([0, 0, 0, x, y, 1, -v * x, -v * y]); values.push(v);
+    matrix.push([x, y, 1, 0, 0, 0, -u * x, -u * y]);
+    values.push(u);
+    matrix.push([0, 0, 0, x, y, 1, -v * x, -v * y]);
+    values.push(v);
   });
   return [...solveLinear(matrix, values), 1];
 }
@@ -1121,17 +1427,36 @@ export function saveCalibration(record: CalibrationRecord) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, record }));
 }
 
-export function loadCalibration(cameraLabel: string, width: number, height: number): CalibrationRecord | null {
+export function loadCalibration(
+  cameraLabel: string,
+  width: number,
+  height: number,
+): CalibrationRecord | null {
   try {
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null");
-    const record = stored?.version === 1 ? stored.record as CalibrationRecord : null;
-    if (!record || record.cameraLabel !== cameraLabel || record.width !== width || record.height !== height) return null;
-    if (!Array.isArray(record.matrix) || record.matrix.length !== 9 || !record.matrix.every(Number.isFinite)) return null;
+    const record = stored?.version === 1 ? (stored.record as CalibrationRecord) : null;
+    if (
+      !record ||
+      record.cameraLabel !== cameraLabel ||
+      record.width !== width ||
+      record.height !== height
+    )
+      return null;
+    if (
+      !Array.isArray(record.matrix) ||
+      record.matrix.length !== 9 ||
+      !record.matrix.every(Number.isFinite)
+    )
+      return null;
     return record;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
-export function clearCalibration() { localStorage.removeItem(STORAGE_KEY); }
+export function clearCalibration() {
+  localStorage.removeItem(STORAGE_KEY);
+}
 ```
 
 - [ ] **Step 4: Implement the operator calibration drawer**
@@ -1161,9 +1486,20 @@ const targetNames = ["top-left", "top-right", "bottom-right", "bottom-left"];
 export function SetupDrawer(props: SetupDrawerProps) {
   return (
     <>
-      <button className="setup-trigger" type="button" onClick={props.onOpen}>Setup</button>
-      <aside className="setup-drawer" hidden={!props.open} aria-label="Camera and calibration setup">
-        <header><h2>Interaction setup</h2><button type="button" onClick={props.onClose}>Close setup</button></header>
+      <button className="setup-trigger" type="button" onClick={props.onOpen}>
+        Setup
+      </button>
+      <aside
+        className="setup-drawer"
+        hidden={!props.open}
+        aria-label="Camera and calibration setup"
+      >
+        <header>
+          <h2>Interaction setup</h2>
+          <button type="button" onClick={props.onClose}>
+            Close setup
+          </button>
+        </header>
         <p>Mouse input is always available.</p>
         {props.error ? <p role="alert">{props.error}</p> : null}
         <div className="camera-debug">
@@ -1173,13 +1509,29 @@ export function SetupDrawer(props: SetupDrawerProps) {
         {props.calibrationStep !== null ? (
           <div className="calibration-copy">
             <p>Aim your fingertip at the glowing target, hold steady, then press Space.</p>
-            <p>Target {props.calibrationStep + 1} of 4: {targetNames[props.calibrationStep]}</p>
+            <p>
+              Target {props.calibrationStep + 1} of 4: {targetNames[props.calibrationStep]}
+            </p>
           </div>
         ) : null}
         <div className="setup-actions">
-          <button type="button" disabled={props.cameraStatus === "loading"} onClick={props.onEnableCamera}>Enable camera</button>
-          <button type="button" disabled={props.cameraStatus !== "ready"} onClick={props.onBeginCalibration}>Calibrate</button>
-          <button type="button" onClick={props.onClearCalibration}>Clear calibration</button>
+          <button
+            type="button"
+            disabled={props.cameraStatus === "loading"}
+            onClick={props.onEnableCamera}
+          >
+            Enable camera
+          </button>
+          <button
+            type="button"
+            disabled={props.cameraStatus !== "ready"}
+            onClick={props.onBeginCalibration}
+          >
+            Calibrate
+          </button>
+          <button type="button" onClick={props.onClearCalibration}>
+            Clear calibration
+          </button>
         </div>
       </aside>
     </>
@@ -1207,6 +1559,7 @@ Expected: transform/storage tests pass and the app builds.
 ### Task 6: MediaPipe hand and pinch adapter
 
 **Files:**
+
 - Create: `src/adapters/handMath.ts`
 - Create: `src/adapters/handMath.test.ts`
 - Create: `src/adapters/HandInteractionSource.ts`
@@ -1214,6 +1567,7 @@ Expected: transform/storage tests pass and the app builds.
 - Modify: `src/ui/table/SetupDrawer.tsx`
 
 **Interfaces:**
+
 - Produces: `pinchRatio(landmarks)`, `HandInteractionSource.start`, raw observation callbacks for calibration/debug, and calibrated hand `PointerSample` delivery.
 - Consumes: `HandLandmarker`, `applyHomography`, saved calibration, and the existing `handleSample` controller path.
 
@@ -1255,7 +1609,9 @@ const distance = (a: Landmark, b: Landmark) => Math.hypot(a.x - b.x, a.y - b.y, 
 
 export function pinchRatio(landmarks: Landmark[]) {
   const handScale = distance(landmarks[0], landmarks[9]);
-  return handScale <= 1e-6 ? Number.POSITIVE_INFINITY : distance(landmarks[4], landmarks[8]) / handScale;
+  return handScale <= 1e-6
+    ? Number.POSITIVE_INFINITY
+    : distance(landmarks[4], landmarks[8]) / handScale;
 }
 ```
 
@@ -1271,9 +1627,14 @@ import type { Point } from "../domain/types";
 import { pinchRatio } from "./handMath";
 
 const wasmRoot = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm";
-const modelPath = "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
+const modelPath =
+  "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
 
-export type HandObservation = { rawPoint?: Point; landmarks: NormalizedLandmark[]; confidence: number };
+export type HandObservation = {
+  rawPoint?: Point;
+  landmarks: NormalizedLandmark[];
+  confidence: number;
+};
 type HandSourceOptions = {
   video: HTMLVideoElement;
   onObservation(observation: HandObservation): void;
@@ -1292,7 +1653,9 @@ export class HandInteractionSource {
 
   constructor(private options: HandSourceOptions) {}
 
-  setCalibration(matrix: number[] | null) { this.matrix = matrix; }
+  setCalibration(matrix: number[] | null) {
+    this.matrix = matrix;
+  }
 
   async start(listener: (sample: PointerSample) => void) {
     try {
@@ -1305,11 +1668,20 @@ export class HandInteractionSource {
         minTrackingConfidence: 0.5,
       };
       try {
-        this.landmarker = await HandLandmarker.createFromOptions(vision, { ...common, baseOptions: { modelAssetPath: modelPath, delegate: "GPU" } });
+        this.landmarker = await HandLandmarker.createFromOptions(vision, {
+          ...common,
+          baseOptions: { modelAssetPath: modelPath, delegate: "GPU" },
+        });
       } catch {
-        this.landmarker = await HandLandmarker.createFromOptions(vision, { ...common, baseOptions: { modelAssetPath: modelPath } });
+        this.landmarker = await HandLandmarker.createFromOptions(vision, {
+          ...common,
+          baseOptions: { modelAssetPath: modelPath },
+        });
       }
-      this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      });
       this.options.video.srcObject = this.stream;
       await this.options.video.play();
       this.running = true;
@@ -1323,13 +1695,22 @@ export class HandInteractionSource {
 
   private schedule(listener: (sample: PointerSample) => void) {
     if (!this.running) return;
-    const run = () => { this.processFrame(listener); this.schedule(listener); };
-    if (typeof this.options.video.requestVideoFrameCallback === "function") this.videoFrameId = this.options.video.requestVideoFrameCallback(run);
+    const run = () => {
+      this.processFrame(listener);
+      this.schedule(listener);
+    };
+    if (typeof this.options.video.requestVideoFrameCallback === "function")
+      this.videoFrameId = this.options.video.requestVideoFrameCallback(run);
     else this.frameId = requestAnimationFrame(run);
   }
 
   private processFrame(listener: (sample: PointerSample) => void) {
-    if (!this.landmarker || this.options.video.readyState < 2 || this.options.video.currentTime === this.lastVideoTime) return;
+    if (
+      !this.landmarker ||
+      this.options.video.readyState < 2 ||
+      this.options.video.currentTime === this.lastVideoTime
+    )
+      return;
     this.lastVideoTime = this.options.video.currentTime;
     const timestamp = performance.now();
     const result = this.landmarker.detectForVideo(this.options.video, timestamp);
@@ -1337,7 +1718,16 @@ export class HandInteractionSource {
     const confidence = result.handedness[0]?.[0]?.score ?? 0;
     if (!landmarks) {
       this.options.onObservation({ landmarks: [], confidence: 0 });
-      if (this.hadHand) listener({ x: 0, y: 0, source: "hand", tracked: false, confidence: 0, confirm: false, timestamp });
+      if (this.hadHand)
+        listener({
+          x: 0,
+          y: 0,
+          source: "hand",
+          tracked: false,
+          confidence: 0,
+          confirm: false,
+          timestamp,
+        });
       this.hadHand = false;
       return;
     }
@@ -1346,12 +1736,21 @@ export class HandInteractionSource {
     this.options.onObservation({ rawPoint, landmarks, confidence });
     if (!this.matrix) return;
     const point = applyHomography(this.matrix, rawPoint);
-    listener({ ...point, source: "hand", tracked: true, confidence, pinchRatio: pinchRatio(landmarks), confirm: false, timestamp });
+    listener({
+      ...point,
+      source: "hand",
+      tracked: true,
+      confidence,
+      pinchRatio: pinchRatio(landmarks),
+      confirm: false,
+      timestamp,
+    });
   }
 
   stop() {
     this.running = false;
-    if (this.videoFrameId !== undefined) this.options.video.cancelVideoFrameCallback(this.videoFrameId);
+    if (this.videoFrameId !== undefined)
+      this.options.video.cancelVideoFrameCallback(this.videoFrameId);
     if (this.frameId !== undefined) cancelAnimationFrame(this.frameId);
     this.stream?.getTracks().forEach((track) => track.stop());
     this.landmarker?.close();
@@ -1381,7 +1780,8 @@ const [calibrationStep, setCalibrationStep] = useState<number | null>(null);
 const [instructionVisible, setInstructionVisible] = useState(true);
 
 const onObservation = useCallback((observation: HandObservation) => {
-  if (observation.rawPoint) observationBuffer.current = [...observationBuffer.current.slice(-7), observation.rawPoint];
+  if (observation.rawPoint)
+    observationBuffer.current = [...observationBuffer.current.slice(-7), observation.rawPoint];
   const canvas = canvasRef.current;
   const video = videoRef.current;
   if (!canvas || !video) return;
@@ -1391,7 +1791,8 @@ const onObservation = useCallback((observation: HandObservation) => {
   if (!context) return;
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.fillStyle = "#48dbfb";
-  for (const landmark of observation.landmarks) context.fillRect((1 - landmark.x) * canvas.width - 2, landmark.y * canvas.height - 2, 4, 4);
+  for (const landmark of observation.landmarks)
+    context.fillRect((1 - landmark.x) * canvas.width - 2, landmark.y * canvas.height - 2, 4, 4);
 }, []);
 
 const enableCamera = useCallback(async () => {
@@ -1399,15 +1800,25 @@ const enableCamera = useCallback(async () => {
   handSourceRef.current?.stop();
   setCameraStatus("loading");
   setCameraError(null);
-  const source = new HandInteractionSource({ video: videoRef.current, onObservation, onError: setCameraError });
+  const source = new HandInteractionSource({
+    video: videoRef.current,
+    onObservation,
+    onError: setCameraError,
+  });
   handSourceRef.current = source;
   try {
     await source.start(handleSample);
     const track = (videoRef.current.srcObject as MediaStream).getVideoTracks()[0];
-    const saved = loadCalibration(track.label, tableRef.current.clientWidth, tableRef.current.clientHeight);
+    const saved = loadCalibration(
+      track.label,
+      tableRef.current.clientWidth,
+      tableRef.current.clientHeight,
+    );
     source.setCalibration(saved?.matrix ?? null);
     setCameraStatus("ready");
-  } catch { setCameraStatus("error"); }
+  } catch {
+    setCameraStatus("error");
+  }
 }, [handleSample, onObservation]);
 
 const beginCalibration = useCallback(() => {
@@ -1418,16 +1829,35 @@ const beginCalibration = useCallback(() => {
 
 useEffect(() => {
   const capture = (event: KeyboardEvent) => {
-    if (event.code !== "Space" || calibrationStep === null || observationBuffer.current.length < 4 || !tableRef.current || !videoRef.current) return;
+    if (
+      event.code !== "Space" ||
+      calibrationStep === null ||
+      observationBuffer.current.length < 4 ||
+      !tableRef.current ||
+      !videoRef.current
+    )
+      return;
     event.preventDefault();
     const points = observationBuffer.current;
-    const median = (values: number[]) => [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)];
-    capturedPoints.current.push({ x: median(points.map((point) => point.x)), y: median(points.map((point) => point.y)) });
+    const median = (values: number[]) =>
+      [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)];
+    capturedPoints.current.push({
+      x: median(points.map((point) => point.x)),
+      y: median(points.map((point) => point.y)),
+    });
     observationBuffer.current = [];
-    if (capturedPoints.current.length < 4) { setCalibrationStep(capturedPoints.current.length); return; }
+    if (capturedPoints.current.length < 4) {
+      setCalibrationStep(capturedPoints.current.length);
+      return;
+    }
     const matrix = solveHomography(capturedPoints.current);
     const track = (videoRef.current.srcObject as MediaStream).getVideoTracks()[0];
-    saveCalibration({ cameraLabel: track.label, width: tableRef.current.clientWidth, height: tableRef.current.clientHeight, matrix });
+    saveCalibration({
+      cameraLabel: track.label,
+      width: tableRef.current.clientWidth,
+      height: tableRef.current.clientHeight,
+      matrix,
+    });
     handSourceRef.current?.setCalibration(matrix);
     setCalibrationStep(null);
   };
@@ -1489,6 +1919,7 @@ Expected: math, gesture, and calibration tests pass; build succeeds. Then grant 
 ### Task 7: Portfolio polish and acceptance verification
 
 **Files:**
+
 - Modify: `src/ui/table/TableDisplay.tsx`
 - Modify: `src/ui/table/PeriodicTable.tsx`
 - Modify: `src/ui/table/SetupDrawer.tsx`
@@ -1498,6 +1929,7 @@ Expected: math, gesture, and calibration tests pass; build succeeds. Then grant 
 - Create: `README.md`
 
 **Interfaces:**
+
 - Produces: the accepted proof-of-concept build and concise local run instructions.
 - Consumes: every prior task; introduces no new architecture.
 
@@ -1508,7 +1940,9 @@ Extend `src/ui/info/InfoDisplay.test.tsx` with these exact tests:
 ```tsx
 it("applies the selected category color", () => {
   render(<InfoDisplay selectedAtomicNumber={79} />);
-  expect(screen.getByRole("main", { name: /element information display/i })).toHaveStyle("--accent: #feca57");
+  expect(screen.getByRole("main", { name: /element information display/i })).toHaveStyle(
+    "--accent: #feca57",
+  );
 });
 
 it("keeps the attract state for an invalid atomic number", () => {
@@ -1528,44 +1962,225 @@ Expected: every test passes. Fix only failures against the approved design; do n
 Complete `src/styles/global.css` with the Task 4 rules plus:
 
 ```css
-body { min-width: 320px; overflow-x: hidden; }
-.interaction-instruction { margin: 0 0 1rem; text-align: center; color: #d5dde9; letter-spacing: .08em; }
-.table-stage { position: relative; }
-.cell-number { display: block; font-size: clamp(.42rem, .58vw, .8rem); opacity: .7; text-align: left; }
-.cell-symbol { display: block; font-size: clamp(.72rem, 1.42vw, 2rem); line-height: 1; }
-.element-cell[data-selected="true"] { border-width: 2px; background: color-mix(in srgb, var(--accent) 12%, #111722); }
-.element-cell:focus-visible, .setup-trigger:focus-visible, .setup-drawer button:focus-visible { outline: 3px solid #f4efe6; outline-offset: 3px; }
-.hand-cursor { position: absolute; width: 1.2rem; aspect-ratio: 1; border: 2px solid #fff; border-radius: 999px; transform: translate(-50%, -50%); box-shadow: 0 0 18px #48dbfb; pointer-events: none; }
-.setup-trigger { position: fixed; z-index: 20; right: 2rem; top: 2rem; border: 1px solid #536075; border-radius: 999px; background: #111722; color: #f4efe6; padding: .65rem 1rem; }
-.setup-drawer { position: fixed; z-index: 30; inset: 1rem 1rem auto auto; width: min(34rem, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto; border: 1px solid #536075; border-radius: 1rem; background: #0d121bcc; backdrop-filter: blur(20px); padding: 1.25rem; box-shadow: 0 24px 80px #000a; }
-.setup-drawer[hidden] { display: none; }
-.setup-drawer header, .setup-actions { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; }
-.setup-drawer button { border: 1px solid #6d7890; border-radius: .55rem; background: #192231; color: #f4efe6; padding: .6rem .8rem; }
-.camera-debug { position: relative; margin-block: 1rem; aspect-ratio: 16 / 9; overflow: hidden; border-radius: .75rem; background: #05070a; }
-.camera-debug video, .camera-debug canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.camera-debug video { transform: scaleX(-1); }
-.calibration-target { position: absolute; z-index: 15; width: 2rem; aspect-ratio: 1; border-radius: 999px; background: #fff; box-shadow: 0 0 30px #48dbfb; }
-.calibration-target[data-corner="top-left"] { left: 0; top: 0; }
-.calibration-target[data-corner="top-right"] { right: 0; top: 0; }
-.calibration-target[data-corner="bottom-right"] { right: 0; bottom: 0; }
-.calibration-target[data-corner="bottom-left"] { left: 0; bottom: 0; }
-.info-display { min-height: 100vh; display: grid; place-items: center; padding: clamp(2rem, 6vw, 7rem); background: radial-gradient(circle at 25% 25%, color-mix(in srgb, var(--accent, #60708a) 28%, transparent), transparent 45%), #080b10; }
-.info-attract { color: #aab4c0; font-size: clamp(1.5rem, 3vw, 4rem); letter-spacing: .04em; }
-.element-portrait { width: min(68rem, 100%); animation: portrait-in 620ms cubic-bezier(.2,.8,.2,1); }
-.element-kicker, .element-category, dt { text-transform: uppercase; letter-spacing: .12em; color: var(--accent); }
-.element-symbol { font-size: clamp(8rem, 28vw, 26rem); font-weight: 750; line-height: .74; color: var(--accent); text-shadow: 0 0 70px color-mix(in srgb, var(--accent) 35%, transparent); }
-.element-portrait h1 { margin: 1rem 0 .25rem; font-size: clamp(3rem, 7vw, 8rem); line-height: .95; }
-.element-blurb, .element-fact { max-width: 54rem; font-size: clamp(1.05rem, 1.6vw, 1.8rem); line-height: 1.5; }
-.element-fact { margin-top: 2rem; padding-left: 1rem; border-left: 3px solid var(--accent); }
-@keyframes portrait-in { from { opacity: 0; transform: translateY(18px); } }
+body {
+  min-width: 320px;
+  overflow-x: hidden;
+}
+.interaction-instruction {
+  margin: 0 0 1rem;
+  text-align: center;
+  color: #d5dde9;
+  letter-spacing: 0.08em;
+}
+.table-stage {
+  position: relative;
+}
+.cell-number {
+  display: block;
+  font-size: clamp(0.42rem, 0.58vw, 0.8rem);
+  opacity: 0.7;
+  text-align: left;
+}
+.cell-symbol {
+  display: block;
+  font-size: clamp(0.72rem, 1.42vw, 2rem);
+  line-height: 1;
+}
+.element-cell[data-selected="true"] {
+  border-width: 2px;
+  background: color-mix(in srgb, var(--accent) 12%, #111722);
+}
+.element-cell:focus-visible,
+.setup-trigger:focus-visible,
+.setup-drawer button:focus-visible {
+  outline: 3px solid #f4efe6;
+  outline-offset: 3px;
+}
+.hand-cursor {
+  position: absolute;
+  width: 1.2rem;
+  aspect-ratio: 1;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 18px #48dbfb;
+  pointer-events: none;
+}
+.setup-trigger {
+  position: fixed;
+  z-index: 20;
+  right: 2rem;
+  top: 2rem;
+  border: 1px solid #536075;
+  border-radius: 999px;
+  background: #111722;
+  color: #f4efe6;
+  padding: 0.65rem 1rem;
+}
+.setup-drawer {
+  position: fixed;
+  z-index: 30;
+  inset: 1rem 1rem auto auto;
+  width: min(34rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  border: 1px solid #536075;
+  border-radius: 1rem;
+  background: #0d121bcc;
+  backdrop-filter: blur(20px);
+  padding: 1.25rem;
+  box-shadow: 0 24px 80px #000a;
+}
+.setup-drawer[hidden] {
+  display: none;
+}
+.setup-drawer header,
+.setup-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.setup-drawer button {
+  border: 1px solid #6d7890;
+  border-radius: 0.55rem;
+  background: #192231;
+  color: #f4efe6;
+  padding: 0.6rem 0.8rem;
+}
+.camera-debug {
+  position: relative;
+  margin-block: 1rem;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background: #05070a;
+}
+.camera-debug video,
+.camera-debug canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.camera-debug video {
+  transform: scaleX(-1);
+}
+.calibration-target {
+  position: absolute;
+  z-index: 15;
+  width: 2rem;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 30px #48dbfb;
+}
+.calibration-target[data-corner="top-left"] {
+  left: 0;
+  top: 0;
+}
+.calibration-target[data-corner="top-right"] {
+  right: 0;
+  top: 0;
+}
+.calibration-target[data-corner="bottom-right"] {
+  right: 0;
+  bottom: 0;
+}
+.calibration-target[data-corner="bottom-left"] {
+  left: 0;
+  bottom: 0;
+}
+.info-display {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: clamp(2rem, 6vw, 7rem);
+  background:
+    radial-gradient(
+      circle at 25% 25%,
+      color-mix(in srgb, var(--accent, #60708a) 28%, transparent),
+      transparent 45%
+    ),
+    #080b10;
+}
+.info-attract {
+  color: #aab4c0;
+  font-size: clamp(1.5rem, 3vw, 4rem);
+  letter-spacing: 0.04em;
+}
+.element-portrait {
+  width: min(68rem, 100%);
+  animation: portrait-in 620ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.element-kicker,
+.element-category,
+dt {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+.element-symbol {
+  font-size: clamp(8rem, 28vw, 26rem);
+  font-weight: 750;
+  line-height: 0.74;
+  color: var(--accent);
+  text-shadow: 0 0 70px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.element-portrait h1 {
+  margin: 1rem 0 0.25rem;
+  font-size: clamp(3rem, 7vw, 8rem);
+  line-height: 0.95;
+}
+.element-blurb,
+.element-fact {
+  max-width: 54rem;
+  font-size: clamp(1.05rem, 1.6vw, 1.8rem);
+  line-height: 1.5;
+}
+.element-fact {
+  margin-top: 2rem;
+  padding-left: 1rem;
+  border-left: 3px solid var(--accent);
+}
+@keyframes portrait-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
 @media (max-width: 900px) {
-  .table-display::before { content: "Best experienced on a desktop display"; display: block; margin-bottom: .75rem; text-align: center; color: #ffcf70; }
-  .table-display { padding: 1rem; overflow: auto; }
-  .periodic-table { min-width: 880px; }
+  .table-display::before {
+    content: "Best experienced on a desktop display";
+    display: block;
+    margin-bottom: 0.75rem;
+    text-align: center;
+    color: #ffcf70;
+  }
+  .table-display {
+    padding: 1rem;
+    overflow: auto;
+  }
+  .periodic-table {
+    min-width: 880px;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; scroll-behavior: auto !important; }
-  .element-cell, .element-portrait, .hand-cursor { transform: none !important; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+  .element-cell,
+  .element-portrait,
+  .hand-cursor {
+    transform: none !important;
+  }
 }
 ```
 

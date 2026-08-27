@@ -91,9 +91,8 @@ export function reduceInteraction(
 
   if (sample.engaged) {
     // Held: either nothing under the pointer to confirm, or already confirmed.
-    const phase: InteractionPhase = state.phase === "confirmed" || state.phase === "cooldown"
-      ? "cooldown"
-      : "armed";
+    const phase: InteractionPhase =
+      state.phase === "confirmed" || state.phase === "cooldown" ? "cooldown" : "armed";
     return { state: { ...base, phase }, events: [] };
   }
 

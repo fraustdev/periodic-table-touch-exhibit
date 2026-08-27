@@ -7,26 +7,47 @@ addressable LED strip around the screen edge ripples outward from the cell that 
 Two input drivers produce identical behaviour: a mouse, and a webcam hand tracker (MediaPipe)
 where you point with your index finger and pinch to select.
 
+![The table display, idle](docs/images/table-idle.jpg)
+
+_The table display. Hovering an element illuminates its whole group and period; the readout in the
+grid's empty quadrant repeats the current element, because a finger occludes the cell it presses._
+
+![The interpretation panel showing gold](docs/images/info-gold.jpg)
+
+_The second display, as an editorial exhibit label. Every scalar sits on a named scale rather than
+appearing as a bare number._
+
 ```bash
 npm install
 npm run dev          # http://localhost:5173/table  and  /info
-npm test             # 51 tests
+npm test             # 73 tests
 npm run build
 ```
 
 Open `/table`, then use **Setup → Open info display** and drag that window to the second monitor.
 
+## Documentation
+
+| Document                                                       | For                                                              |
+| -------------------------------------------------------------- | ---------------------------------------------------------------- |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md)                           | Picking this up as a teammate. A fifteen-minute tour.            |
+| [`CLAUDE.md`](CLAUDE.md)                                       | Invariants and conventions, written for AI collaborators.        |
+| [`docs/decisions.md`](docs/decisions.md)                       | Why things are the way they are, and what would change our mind. |
+| [`docs/hardware-translation.md`](docs/hardware-translation.md) | What each part becomes on the real installation.                 |
+| [`docs/design-spec.md`](docs/design-spec.md)                   | The original design specification.                               |
+| [`docs/implementation-plan.md`](docs/implementation-plan.md)   | The task-by-task build plan that was executed.                   |
+
 ## What this is proving
 
 The real installation is a 55-inch commercial touchscreen with physical WS2812-class LEDs around
 the bezel. That hardware does not exist yet, so this prototype exists to make the eventual port
-*boring*. Three seams are held deliberately narrow:
+_boring_. Three seams are held deliberately narrow:
 
-| Seam | Now | Later |
-|---|---|---|
-| **Input** | `MouseInteractionSource`, `HandInteractionSource` | `TouchDriver` — native touch events |
-| **Transport** | `BrowserEventBus` over `BroadcastChannel` | WebSocket to an authoritative local process |
-| **Light output** | 120 virtual pixels rendered as DOM segments | serial frames to an LED controller |
+| Seam             | Now                                               | Later                                       |
+| ---------------- | ------------------------------------------------- | ------------------------------------------- |
+| **Input**        | `MouseInteractionSource`, `HandInteractionSource` | `TouchDriver` — native touch events         |
+| **Transport**    | `BrowserEventBus` over `BroadcastChannel`         | WebSocket to an authoritative local process |
+| **Light output** | 120 virtual pixels rendered as DOM segments       | serial frames to an LED controller          |
 
 Everything gesture-shaped stops at the driver boundary. No MediaPipe landmark ever reaches the
 interaction rules, the display, or the light layer — the only thing that crosses is a
@@ -78,7 +99,7 @@ Optional, and off until enabled in the Setup drawer.
   tracking works the moment the camera starts. Calibration is a refinement, never a gate.
 - **Corner calibration:** hold a fingertip on each of four markers; the captured camera-space
   points solve a projective transform into table space, correcting for an off-axis camera. The
-  dwell captures the *mean* of the whole hold rather than the sample that started it, and forgives
+  dwell captures the _mean_ of the whole hold rather than the sample that started it, and forgives
   a brief wobble instead of restarting — an unsupported hand always drifts.
 - **Validated before use:** a capture that is too small, taken out of order, or self-crossing still
   solves to a transform, so the quadrilateral is checked for area, convexity, and winding, and
@@ -91,9 +112,9 @@ Tune anything in `src/domain/config.ts`.
 
 ## Out of scope, on purpose
 
-Dwell selection, multi-hand input, nine-point calibration, event replay, state recovery for a
-WebSocket/MQTT transports, and real LED control. Each has a seam waiting for it; none is needed to
-prove the interaction.
+Dwell selection, multi-hand input, nine-point calibration, event replay, WebSocket/MQTT transports,
+and real LED control. Each has a seam waiting for it; none is needed to prove the interaction.
+`docs/decisions.md` records why each was deferred rather than dismissed.
 
 A display that opens or reloads mid-session does recover: it broadcasts `requestState` and the
 table re-announces the current selection. That is a handshake, not an authoritative server — if no

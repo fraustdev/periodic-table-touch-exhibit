@@ -54,7 +54,9 @@ export function InfoDisplay() {
           Interpretation panel
         </p>
         <p className="eyebrow" style={{ margin: 0 }}>
-          {element ? `Group ${element.group ?? "f-block"} · Period ${element.period}` : "Awaiting selection"}
+          {element
+            ? `Group ${element.group ?? "f-block"} · Period ${element.period}`
+            : "Awaiting selection"}
         </p>
       </header>
 
@@ -70,9 +72,7 @@ export function InfoDisplay() {
         <>
           <article className="specimen enter" key={element.atomicNumber}>
             <div className="specimen__glyph">
-              <span className="specimen__z">
-                {String(element.atomicNumber).padStart(3, "0")}
-              </span>
+              <span className="specimen__z">{String(element.atomicNumber).padStart(3, "0")}</span>
               <h1 className="specimen__symbol">{element.symbol}</h1>
               <p className="specimen__name">{element.name}</p>
               <span className="chip">

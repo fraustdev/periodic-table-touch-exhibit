@@ -18,7 +18,11 @@ import {
   type CameraDevice,
 } from "../../adapters/camera";
 import { useExhibitEventBus } from "../../hooks/useExhibitEventBus";
-import { initialInteractionState, reduceInteraction, type InteractionState } from "../../domain/interaction";
+import {
+  initialInteractionState,
+  reduceInteraction,
+  type InteractionState,
+} from "../../domain/interaction";
 import { getCellCenter } from "../../domain/elementLayout";
 import {
   CALIBRATION_CORNERS,
@@ -91,7 +95,11 @@ export function TableDisplay() {
   /** The one path from a pointer sample to exhibit state and events. */
   const handleSample = useCallback(
     (sample: Parameters<Parameters<MouseInteractionSource["start"]>[0]>[0]) => {
-      const { state, events } = reduceInteraction(interactionRef.current, sample, performance.now());
+      const { state, events } = reduceInteraction(
+        interactionRef.current,
+        sample,
+        performance.now(),
+      );
       interactionRef.current = state;
       setInteraction(state);
 
@@ -138,7 +146,9 @@ export function TableDisplay() {
     dwellRef.current = result.state;
 
     if (result.kind === "idle") {
-      setRun((current) => (current && current.progress !== 0 ? { ...current, progress: 0 } : current));
+      setRun((current) =>
+        current && current.progress !== 0 ? { ...current, progress: 0 } : current,
+      );
       return;
     }
 
@@ -179,7 +189,8 @@ export function TableDisplay() {
     if (!built) {
       setHandStatus({
         kind: "error",
-        message: "Those four points did not form a usable transform. Try again, tracing a larger rectangle.",
+        message:
+          "Those four points did not form a usable transform. Try again, tracing a larger rectangle.",
       });
       return;
     }
@@ -323,7 +334,7 @@ export function TableDisplay() {
   // ---- presentation --------------------------------------------------------
 
   const focus = interaction.hovered ?? interaction.selected;
-  const focusElement = focus === null ? null : getElement(focus) ?? null;
+  const focusElement = focus === null ? null : (getElement(focus) ?? null);
   const accent = focusElement ? getCategoryColor(focusElement.category) : "#d9b654";
   const activeCategory = focusElement?.category ?? null;
 

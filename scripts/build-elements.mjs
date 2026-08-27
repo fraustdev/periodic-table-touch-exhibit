@@ -79,7 +79,13 @@ for (const element of elements) {
   occupied.add(key);
 }
 
-writeFileSync(join(here, "..", "src", "data", "elements.json"), `${JSON.stringify(elements, null, 1)}\n`);
+writeFileSync(
+  join(here, "..", "src", "data", "elements.json"),
+  `${JSON.stringify(elements, null, 1)}\n`,
+);
 console.log(`Wrote ${elements.length} elements.`);
-const counts = elements.reduce((acc, e) => ({ ...acc, [e.category]: (acc[e.category] ?? 0) + 1 }), {});
+const counts = elements.reduce(
+  (acc, e) => ({ ...acc, [e.category]: (acc[e.category] ?? 0) + 1 }),
+  {},
+);
 console.log(counts);

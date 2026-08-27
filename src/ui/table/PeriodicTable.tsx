@@ -64,7 +64,7 @@ export const PeriodicTable = forwardRef<HTMLDivElement, Props>(function Periodic
 ) {
   const { hovered, selected, phase, point, source } = interaction;
   const focus = hovered ?? selected;
-  const focusElement = focus === null ? null : getElement(focus) ?? null;
+  const focusElement = focus === null ? null : (getElement(focus) ?? null);
 
   return (
     <div className="table-frame">

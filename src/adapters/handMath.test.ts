@@ -2,7 +2,15 @@ import { describe, expect, it } from "vitest";
 import { fingertipPoint, pinchRatio, smoothPoint, type Landmark } from "./handMath";
 
 /** Builds a 21-landmark hand where the pinch gap and overall scale are explicit. */
-function hand({ gap, scale, tip }: { gap: number; scale: number; tip?: { x: number; y: number } }): Landmark[] {
+function hand({
+  gap,
+  scale,
+  tip,
+}: {
+  gap: number;
+  scale: number;
+  tip?: { x: number; y: number };
+}): Landmark[] {
   const landmarks: Landmark[] = Array.from({ length: 21 }, () => ({ x: 0, y: 0 }));
   landmarks[0] = { x: 0.5, y: 0.5 }; // wrist
   landmarks[9] = { x: 0.5, y: 0.5 - scale }; // middle knuckle, scale above the wrist

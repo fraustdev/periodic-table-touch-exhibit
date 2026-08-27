@@ -35,28 +35,52 @@ function buildStrip(): Led[] {
     const t = (i + 0.5) / SEGMENTS.top;
     leds.push({
       loop: START.top + t * SPAN.top,
-      style: { top: 0, left: `${t * 100}%`, width: `min(1.4vw, 22px)`, height: thin, transform: "translateX(-50%)" },
+      style: {
+        top: 0,
+        left: `${t * 100}%`,
+        width: `min(1.4vw, 22px)`,
+        height: thin,
+        transform: "translateX(-50%)",
+      },
     });
   }
   for (let i = 0; i < SEGMENTS.right; i += 1) {
     const t = (i + 0.5) / SEGMENTS.right;
     leds.push({
       loop: START.right + t * SPAN.right,
-      style: { right: 0, top: `${t * 100}%`, width: thin, height: `min(2.4vh, 22px)`, transform: "translateY(-50%)" },
+      style: {
+        right: 0,
+        top: `${t * 100}%`,
+        width: thin,
+        height: `min(2.4vh, 22px)`,
+        transform: "translateY(-50%)",
+      },
     });
   }
   for (let i = 0; i < SEGMENTS.bottom; i += 1) {
     const t = (i + 0.5) / SEGMENTS.bottom;
     leds.push({
       loop: START.bottom + t * SPAN.bottom,
-      style: { bottom: 0, right: `${t * 100}%`, width: `min(1.4vw, 22px)`, height: thin, transform: "translateX(50%)" },
+      style: {
+        bottom: 0,
+        right: `${t * 100}%`,
+        width: `min(1.4vw, 22px)`,
+        height: thin,
+        transform: "translateX(50%)",
+      },
     });
   }
   for (let i = 0; i < SEGMENTS.left; i += 1) {
     const t = (i + 0.5) / SEGMENTS.left;
     leds.push({
       loop: START.left + t * SPAN.left,
-      style: { left: 0, bottom: `${t * 100}%`, width: thin, height: `min(2.4vh, 22px)`, transform: "translateY(50%)" },
+      style: {
+        left: 0,
+        bottom: `${t * 100}%`,
+        width: thin,
+        height: `min(2.4vh, 22px)`,
+        transform: "translateY(50%)",
+      },
     });
   }
   return leds;
@@ -109,7 +133,12 @@ export function PerimeterLights({ pulse }: { pulse: Pulse | null }) {
         <span
           key={index}
           className="led"
-          style={{ ...led.style, "--lag": active ? loopLag(led.loop, active.origin) : 0 } as React.CSSProperties}
+          style={
+            {
+              ...led.style,
+              "--lag": active ? loopLag(led.loop, active.origin) : 0,
+            } as React.CSSProperties
+          }
         />
       ))}
     </div>

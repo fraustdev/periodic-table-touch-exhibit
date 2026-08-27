@@ -1,7 +1,17 @@
 import { EXHIBIT_CONFIG } from "./config";
 import type { Point } from "./types";
 
-export type Matrix3 = readonly [number, number, number, number, number, number, number, number, number];
+export type Matrix3 = readonly [
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+];
 
 /** The four table corners, captured in this order. */
 export const CALIBRATION_CORNERS = [
@@ -40,7 +50,10 @@ export function defaultRegionPoints(inset = EXHIBIT_CONFIG.defaultRegionInset): 
 }
 
 export function createDefaultCalibration(): Calibration {
-  const matrix = solveHomography(defaultRegionPoints(), CALIBRATION_CORNERS.map((c) => c.target));
+  const matrix = solveHomography(
+    defaultRegionPoints(),
+    CALIBRATION_CORNERS.map((c) => c.target),
+  );
   if (!matrix) throw new Error("The default region is degenerate.");
   return {
     matrix,
@@ -104,7 +117,8 @@ export function validateCapturedQuad(points: readonly Point[]): QuadCheck {
   if (topLeft.x >= topRight.x || bottomLeft.x >= bottomRight.x) {
     return {
       ok: false,
-      reason: "The left points came out to the right of the right ones. Take them in the order shown.",
+      reason:
+        "The left points came out to the right of the right ones. Take them in the order shown.",
     };
   }
   if (topLeft.y >= bottomLeft.y || topRight.y >= bottomRight.y) {

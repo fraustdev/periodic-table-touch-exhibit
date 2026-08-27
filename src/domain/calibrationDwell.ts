@@ -17,10 +17,10 @@ export type DwellResult =
   | { kind: "captured"; state: null; point: Point };
 
 function centroidOf(samples: readonly Point[]): Point {
-  const total = samples.reduce(
-    (sum, point) => ({ x: sum.x + point.x, y: sum.y + point.y }),
-    { x: 0, y: 0 },
-  );
+  const total = samples.reduce((sum, point) => ({ x: sum.x + point.x, y: sum.y + point.y }), {
+    x: 0,
+    y: 0,
+  });
   return { x: total.x / samples.length, y: total.y / samples.length };
 }
 

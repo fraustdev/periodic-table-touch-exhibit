@@ -27,7 +27,7 @@ export function detectWebGLSupport(): { supported: boolean; reason: string } {
         reason:
           "This browser cannot create a WebGL context, which MediaPipe requires for every frame. " +
           "Hand tracking is unavailable until it is restored — the mouse exhibit is unaffected. " +
-          "In Chrome: Settings → System → \"Use graphics acceleration when available\", then fully " +
+          'In Chrome: Settings → System → "Use graphics acceleration when available", then fully ' +
           "restart the browser. Check chrome://gpu if it stays off.",
       };
     }
@@ -214,7 +214,9 @@ export class HandInteractionSource implements InteractionSource {
     diagnostics.videoSize = `${video.videoWidth}×${video.videoHeight}`;
     diagnostics.videoPaused = video.paused;
     const track = (video.srcObject as MediaStream | null)?.getVideoTracks?.()[0];
-    diagnostics.trackState = track ? `${track.readyState}${track.enabled ? "" : " (disabled)"}` : "none";
+    diagnostics.trackState = track
+      ? `${track.readyState}${track.enabled ? "" : " (disabled)"}`
+      : "none";
 
     /** Always report, even on an early return, so the readout proves liveness. */
     const report = (stage: PipelineStage, over: Partial<HandFrame> = {}) => {
@@ -286,7 +288,8 @@ export class HandInteractionSource implements InteractionSource {
     }
 
     const landmarks = result.landmarks?.[0] ?? null;
-    const confidence = result.handedness?.[0]?.[0]?.score ?? result.handednesses?.[0]?.[0]?.score ?? 0;
+    const confidence =
+      result.handedness?.[0]?.[0]?.score ?? result.handednesses?.[0]?.[0]?.score ?? 0;
 
     if (!landmarks) {
       diagnostics.emptyResults += 1;

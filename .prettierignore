@@ -1,0 +1,7 @@
+dist
+public/mediapipe
+src/data/elements.json
+scripts/source-elements.json
+scripts/element-copy.json
+package-lock.json
+docs/images

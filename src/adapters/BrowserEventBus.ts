@@ -14,7 +14,8 @@ export function parseExhibitEvent(value: unknown): ExhibitEvent | null {
 
   if (candidate.type === "elementSelected") {
     if (!isValidAtomicNumber(candidate.atomicNumber)) return null;
-    if (typeof candidate.timestamp !== "number" || !Number.isFinite(candidate.timestamp)) return null;
+    if (typeof candidate.timestamp !== "number" || !Number.isFinite(candidate.timestamp))
+      return null;
     return {
       type: "elementSelected",
       atomicNumber: candidate.atomicNumber,
@@ -45,7 +46,8 @@ export class BrowserEventBus implements ExhibitEventBus {
   private readonly channel: BroadcastChannel | null;
 
   constructor(channelName: string = EXHIBIT_CONFIG.channelName) {
-    this.channel = typeof BroadcastChannel === "function" ? new BroadcastChannel(channelName) : null;
+    this.channel =
+      typeof BroadcastChannel === "function" ? new BroadcastChannel(channelName) : null;
     if (this.channel) {
       this.channel.onmessage = (message: MessageEvent<unknown>) => {
         const event = parseExhibitEvent(message.data);

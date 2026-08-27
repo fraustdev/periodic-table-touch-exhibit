@@ -5,9 +5,7 @@ import { initialInteractionState } from "../../domain/interaction";
 import { elements } from "../../data/elements";
 
 function renderTable(interaction = initialInteractionState) {
-  return render(
-    <PeriodicTable interaction={interaction} confirmToken={0} showReticle={false} />,
-  );
+  return render(<PeriodicTable interaction={interaction} confirmToken={0} showReticle={false} />);
 }
 
 describe("PeriodicTable", () => {
@@ -76,6 +74,8 @@ describe("PeriodicTable", () => {
 
   it("exposes the table as a labelled group", () => {
     renderTable();
-    expect(screen.getByRole("group", { name: /periodic table of the elements/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("group", { name: /periodic table of the elements/i }),
+    ).toBeInTheDocument();
   });
 });

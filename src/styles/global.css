@@ -75,8 +75,16 @@ button {
   position: absolute;
   inset: -20%;
   background:
-    radial-gradient(46% 40% at 50% 30%, color-mix(in oklab, var(--accent) 5%, transparent), transparent 72%),
-    radial-gradient(120% 90% at 50% 108%, color-mix(in oklab, var(--ink-200) 70%, transparent), transparent 62%);
+    radial-gradient(
+      46% 40% at 50% 30%,
+      color-mix(in oklab, var(--accent) 5%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      120% 90% at 50% 108%,
+      color-mix(in oklab, var(--ink-200) 70%, transparent),
+      transparent 62%
+    );
   transition: background 900ms var(--ease-out);
 }
 
@@ -164,8 +172,15 @@ button {
 }
 
 @keyframes breathe {
-  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 55%, transparent); opacity: 0.75; }
-  50% { box-shadow: 0 0 0 5px color-mix(in oklab, var(--accent) 0%, transparent); opacity: 1; }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 55%, transparent);
+    opacity: 0.75;
+  }
+  50% {
+    box-shadow: 0 0 0 5px color-mix(in oklab, var(--accent) 0%, transparent);
+    opacity: 1;
+  }
 }
 
 /* ---------- the grid ---------- */
@@ -306,16 +321,26 @@ button {
   transform: translateY(-3px) scale(1.06);
   z-index: 3;
   border-color: color-mix(in oklab, var(--cat) 75%, transparent);
-  background: linear-gradient(170deg, color-mix(in oklab, var(--cat) 26%, var(--ink-200)), var(--ink-100));
+  background: linear-gradient(
+    170deg,
+    color-mix(in oklab, var(--cat) 26%, var(--ink-200)),
+    var(--ink-100)
+  );
   box-shadow:
     0 0 0 1px color-mix(in oklab, var(--cat) 30%, transparent),
     0 10px 28px -8px color-mix(in oklab, var(--cat) 45%, transparent),
     0 0 40px -14px color-mix(in oklab, var(--cat) 70%, transparent);
 }
 
-.cell--hovered::after { opacity: 1; }
-.cell--hovered .cell__symbol { color: var(--bone-100); }
-.cell--hovered .cell__number { color: var(--bone-400); }
+.cell--hovered::after {
+  opacity: 1;
+}
+.cell--hovered .cell__symbol {
+  color: var(--bone-100);
+}
+.cell--hovered .cell__number {
+  color: var(--bone-400);
+}
 
 .cell--armed {
   transform: translateY(-1px) scale(0.99);
@@ -324,26 +349,46 @@ button {
 
 .cell--selected {
   border-color: color-mix(in oklab, var(--cat) 85%, transparent);
-  background: linear-gradient(170deg, color-mix(in oklab, var(--cat) 34%, var(--ink-200)), var(--ink-100));
+  background: linear-gradient(
+    170deg,
+    color-mix(in oklab, var(--cat) 34%, var(--ink-200)),
+    var(--ink-100)
+  );
 }
 
-.cell--selected::after { opacity: 1; }
-.cell--selected .cell__symbol { color: var(--bone-100); }
+.cell--selected::after {
+  opacity: 1;
+}
+.cell--selected .cell__symbol {
+  color: var(--bone-100);
+}
 
 .cell--confirmed {
   animation: cellStrike 520ms var(--ease-out);
 }
 
 @keyframes cellStrike {
-  0% { transform: scale(0.9); box-shadow: 0 0 0 0 color-mix(in oklab, var(--cat) 85%, transparent); }
-  35% { transform: scale(1.05); }
-  100% { transform: scale(1); box-shadow: 0 0 0 22px color-mix(in oklab, var(--cat) 0%, transparent); }
+  0% {
+    transform: scale(0.9);
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--cat) 85%, transparent);
+  }
+  35% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 22px color-mix(in oklab, var(--cat) 0%, transparent);
+  }
 }
 
 /* group/period passive illumination — the cheapest teaching feature there is */
 .cell--related {
   border-color: color-mix(in oklab, var(--cat) 45%, transparent);
-  background: linear-gradient(170deg, color-mix(in oklab, var(--cat) 15%, var(--ink-100)), var(--ink-050));
+  background: linear-gradient(
+    170deg,
+    color-mix(in oklab, var(--cat) 15%, var(--ink-100)),
+    var(--ink-050)
+  );
 }
 
 /* ---------- focus card: the table's own readout ---------- */
@@ -401,9 +446,15 @@ button {
   font-style: italic;
 }
 
-.focus-card > * { animation: fadeUp 420ms var(--ease-out) both; }
-.focus-card > *:nth-child(2) { animation-delay: 60ms; }
-.focus-card > *:nth-child(3) { animation-delay: 110ms; }
+.focus-card > * {
+  animation: fadeUp 420ms var(--ease-out) both;
+}
+.focus-card > *:nth-child(2) {
+  animation-delay: 60ms;
+}
+.focus-card > *:nth-child(3) {
+  animation-delay: 110ms;
+}
 
 /* ---------- reticle ---------- */
 
@@ -414,7 +465,10 @@ button {
   width: 46px;
   height: 46px;
   margin: -23px 0 0 -23px;
-  transition: width 160ms var(--ease-out), height 160ms var(--ease-out), margin 160ms var(--ease-out);
+  transition:
+    width 160ms var(--ease-out),
+    height 160ms var(--ease-out),
+    margin 160ms var(--ease-out);
 }
 
 .reticle::before,
@@ -469,13 +523,20 @@ button {
 }
 
 @keyframes ledPulse {
-  0% { opacity: 0.055; box-shadow: none; }
+  0% {
+    opacity: 0.055;
+    box-shadow: none;
+  }
   18% {
     opacity: var(--pulse-i, 1);
     background: var(--accent);
     box-shadow: 0 0 14px 3px color-mix(in oklab, var(--accent) 75%, transparent);
   }
-  100% { opacity: 0.055; background: var(--bone-100); box-shadow: none; }
+  100% {
+    opacity: 0.055;
+    background: var(--bone-100);
+    box-shadow: none;
+  }
 }
 
 /* ---------- legend + footer ---------- */
@@ -505,7 +566,9 @@ button {
   transition: color 200ms var(--ease-out);
 }
 
-.legend__item--active { color: var(--bone-200); }
+.legend__item--active {
+  color: var(--bone-200);
+}
 
 .legend__swatch {
   width: 14px;
@@ -515,7 +578,9 @@ button {
   opacity: 0.75;
 }
 
-.legend__item--active .legend__swatch { opacity: 1; }
+.legend__item--active .legend__swatch {
+  opacity: 1;
+}
 
 .prompt {
   font-family: var(--font-body);
@@ -526,7 +591,9 @@ button {
   transition: opacity 700ms var(--ease-out);
 }
 
-.prompt--hidden { opacity: 0; }
+.prompt--hidden {
+  opacity: 0;
+}
 
 /* ---------- setup drawer ---------- */
 
@@ -539,7 +606,9 @@ button {
   padding: 0.3rem 0.6rem;
   border: var(--rule);
   border-radius: 2px;
-  transition: color 200ms, border-color 200ms;
+  transition:
+    color 200ms,
+    border-color 200ms;
 }
 
 .drawer-toggle:hover {
@@ -571,7 +640,9 @@ button {
   transition: transform 420ms var(--ease-out);
 }
 
-.drawer--open { transform: translateX(0); }
+.drawer--open {
+  transform: translateX(0);
+}
 
 .drawer h2 {
   margin: 0;
@@ -619,7 +690,10 @@ button {
   border-radius: 2px;
   color: var(--bone-200);
   background: color-mix(in oklab, var(--bone-100) 4%, transparent);
-  transition: background 200ms, border-color 200ms, color 200ms;
+  transition:
+    background 200ms,
+    border-color 200ms,
+    color 200ms;
 }
 
 .button:hover:not(:disabled) {
@@ -628,7 +702,10 @@ button {
   color: var(--bone-100);
 }
 
-.button:disabled { opacity: 0.4; cursor: not-allowed; }
+.button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 .button--primary {
   border-color: color-mix(in oklab, var(--accent) 50%, transparent);
@@ -731,8 +808,18 @@ button {
   color: var(--bone-400);
 }
 
-.readout dt { color: var(--bone-600); letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.5625rem; align-self: center; }
-.readout dd { margin: 0; font-variant-numeric: tabular-nums; color: var(--bone-200); }
+.readout dt {
+  color: var(--bone-600);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.5625rem;
+  align-self: center;
+}
+.readout dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--bone-200);
+}
 
 .verdict {
   display: flex;
@@ -819,7 +906,11 @@ button {
   transition: transform 120ms linear;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .calibration__caption {
   text-align: center;
@@ -834,8 +925,13 @@ button {
 }
 
 @keyframes pulseText {
-  0%, 100% { opacity: 0.55; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .calibration__caption strong {
@@ -884,7 +980,10 @@ button {
 }
 
 @media (max-width: 900px) {
-  .specimen { grid-template-columns: 1fr; align-content: center; }
+  .specimen {
+    grid-template-columns: 1fr;
+    align-content: center;
+  }
 }
 
 .specimen__glyph {
@@ -902,7 +1001,11 @@ button {
   width: 130%;
   aspect-ratio: 1;
   transform: translateY(-50%);
-  background: radial-gradient(circle, color-mix(in oklab, var(--accent) 26%, transparent), transparent 62%);
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--accent) 26%, transparent),
+    transparent 62%
+  );
   pointer-events: none;
   animation: bloom 1100ms var(--ease-out) both;
 }
@@ -950,7 +1053,12 @@ button {
   background: color-mix(in oklab, var(--accent) 12%, transparent);
 }
 
-.chip__dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+.chip__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
 
 .specimen__copy {
   display: grid;
@@ -991,7 +1099,11 @@ button {
   padding-top: 1rem;
 }
 
-.datarail div { display: grid; gap: 0.28rem; min-width: 0; }
+.datarail div {
+  display: grid;
+  gap: 0.28rem;
+  min-width: 0;
+}
 
 .datarail dt {
   font-family: var(--font-mono);
@@ -1050,25 +1162,51 @@ button {
 }
 
 /* entrance choreography, re-triggered by keying on the atomic number */
-.enter > * { animation: fadeUp 700ms var(--ease-out) both; }
-.enter > *:nth-child(1) { animation-delay: 40ms; }
-.enter > *:nth-child(2) { animation-delay: 120ms; }
-.enter > *:nth-child(3) { animation-delay: 200ms; }
-.enter > *:nth-child(4) { animation-delay: 280ms; }
+.enter > * {
+  animation: fadeUp 700ms var(--ease-out) both;
+}
+.enter > *:nth-child(1) {
+  animation-delay: 40ms;
+}
+.enter > *:nth-child(2) {
+  animation-delay: 120ms;
+}
+.enter > *:nth-child(3) {
+  animation-delay: 200ms;
+}
+.enter > *:nth-child(4) {
+  animation-delay: 280ms;
+}
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @keyframes bloom {
-  from { opacity: 0; transform: translateY(-50%) scale(0.82); }
-  to { opacity: 1; transform: translateY(-50%) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(-50%) scale(0.82);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+  }
 }
 
 @keyframes growWidth {
-  from { width: 0; }
-  to { width: var(--fill); }
+  from {
+    width: 0;
+  }
+  to {
+    width: var(--fill);
+  }
 }
 
 .sr-only {
@@ -1094,13 +1232,34 @@ button {
     transition-duration: 160ms !important;
   }
 
-  .cell--hovered { transform: none; }
-  .cell--confirmed { animation: none; }
-  .enter > * { animation: fadeIn 220ms linear both; }
-  .specimen__glyph::before { animation: fadeIn 220ms linear both; }
-  .leds--pulsing .led { animation-delay: 0ms !important; }
-  .status--live .status__dot { animation: none; }
-  .label__attract h1 { animation: none; }
+  .cell--hovered {
+    transform: none;
+  }
+  .cell--confirmed {
+    animation: none;
+  }
+  .enter > * {
+    animation: fadeIn 220ms linear both;
+  }
+  .specimen__glyph::before {
+    animation: fadeIn 220ms linear both;
+  }
+  .leds--pulsing .led {
+    animation-delay: 0ms !important;
+  }
+  .status--live .status__dot {
+    animation: none;
+  }
+  .label__attract h1 {
+    animation: none;
+  }
 
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
 }

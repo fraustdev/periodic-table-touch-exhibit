@@ -14,16 +14,16 @@ parts before anyone buys anything.
 
 ## One-page summary
 
-| Aspect | Prototype | On hardware | Code change |
-|---|---|---|---|
-| Pointer input | MediaPipe hand tracking + mouse | PCAP touchscreen, native pointer events | New driver, ~100 lines. Nothing downstream moves. |
-| Interaction rules | Pure reducer | Identical | **None** |
-| Element data | Committed JSON | Identical, still no network at runtime | **None** |
-| Info display | Second browser window | Second physical panel | **None**, but the type scale needs a pass |
-| Surround lighting | 120 virtual pixels in the DOM | ~230 addressable LEDs in a diffused channel | Swap the sink. Effects are already arc-length addressed. |
-| Transport | `BroadcastChannel` between windows | WebSocket to an authoritative local process | **Real rewrite.** Planned for; ~half a day. |
-| Host | A laptop | Fanless mini PC in the plinth | Deployment only |
-| Camera | Required | Probably removed entirely | Delete the driver |
+| Aspect            | Prototype                          | On hardware                                 | Code change                                              |
+| ----------------- | ---------------------------------- | ------------------------------------------- | -------------------------------------------------------- |
+| Pointer input     | MediaPipe hand tracking + mouse    | PCAP touchscreen, native pointer events     | New driver, ~100 lines. Nothing downstream moves.        |
+| Interaction rules | Pure reducer                       | Identical                                   | **None**                                                 |
+| Element data      | Committed JSON                     | Identical, still no network at runtime      | **None**                                                 |
+| Info display      | Second browser window              | Second physical panel                       | **None**, but the type scale needs a pass                |
+| Surround lighting | 120 virtual pixels in the DOM      | ~230 addressable LEDs in a diffused channel | Swap the sink. Effects are already arc-length addressed. |
+| Transport         | `BroadcastChannel` between windows | WebSocket to an authoritative local process | **Real rewrite.** Planned for; ~half a day.              |
+| Host              | A laptop                           | Fanless mini PC in the plinth               | Deployment only                                          |
+| Camera            | Required                           | Probably removed entirely                   | Delete the driver                                        |
 
 Two rows are genuine work: **transport** and **lighting**. Everything else is configuration,
 deployment, or deletion.
@@ -68,7 +68,7 @@ about 150 mm below it. Verify on the real panel with a real hand, not a mouse.
 
 ### Reach — and why the mount decision comes first
 
-The usable interaction band for a seated wheelchair user *and* a standing adult *and* a child is
+The usable interaction band for a seated wheelchair user _and_ a standing adult _and_ a child is
 roughly **760–1120 mm above finished floor: about 360 mm tall** **(verify against the governing
 accessibility standard for the venue)**. A 55" 16:9 panel has an active area of about
 **1210 × 680 mm**.
@@ -130,10 +130,10 @@ panel bezel, driven by a microcontroller.
 
 For a 1210 × 680 mm active area, the bezel perimeter is roughly **3.8 m**.
 
-| Density | LED count | Notes |
-|---|---|---|
-| 60/m | ~230 | Visible dots unless diffused. Cheapest, lowest power. |
-| 144/m | ~550 | Nearly continuous even with modest diffusion. 2.4× the power. |
+| Density | LED count | Notes                                                         |
+| ------- | --------- | ------------------------------------------------------------- |
+| 60/m    | ~230      | Visible dots unless diffused. Cheapest, lowest power.         |
+| 144/m   | ~550      | Nearly continuous even with modest diffusion. 2.4× the power. |
 
 The 120-pixel prototype maps onto either without touching an effect, because effects address
 normalized arc length. That was the point of building it that way.
@@ -164,7 +164,7 @@ The wire format is already specified: COBS framing with CRC16, written against a
 
 ### Decide RGBW versus RGB now
 
-The white channel is what makes the ambient idle state read as *light* rather than as tinted
+The white channel is what makes the ambient idle state read as _light_ rather than as tinted
 colour. **Retrofitting a W channel is a rewrite of every effect**, because the frame becomes 4
 bytes per pixel instead of 3. Choose before anything is authored.
 
@@ -188,7 +188,7 @@ Non-negotiable, and cheaper to build in than to retrofit:
 
 - A **non-bypassable final governor** stage. Effect authors must not be able to obtain a sink
   handle and write frames directly.
-- **Flash-rate limiting** evaluated on the *composited* frame — individually safe effects sum to
+- **Flash-rate limiting** evaluated on the _composited_ frame — individually safe effects sum to
   unsafe output. Per-region transition counting, not a low-pass, since a low-pass permits a 4 Hz
   square wave.
 - A **brightness floor** as well as a ceiling. A dark surround reads as broken and gets reported as
@@ -219,7 +219,7 @@ WebSocket, and holding the USB serial port to the LED controller.
 
 ### What it costs
 
-Less than it looks, because the event contract *is* the wire format. `elementSelected`,
+Less than it looks, because the event contract _is_ the wire format. `elementSelected`,
 `lightsPulse`, and `requestState` are already validated at the boundary and carry no element
 records — displays resolve locally by atomic number. The work is:
 

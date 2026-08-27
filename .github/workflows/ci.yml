@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # The postinstall step vendors the MediaPipe runtime, which needs a
+      # network download. CI does not exercise hand tracking, so skip it.
+      - name: Install
+        run: npm ci --ignore-scripts
+
+      - name: Format
+        run: npm run format:check
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npm test -- --run
+
+      - name: Build
+        run: npx vite build
+
+      # The dataset is generated and committed. If the generator and the
+      # committed output disagree, one of them was edited by hand.
+      - name: Dataset is reproducible
+        run: |
+          npm run data:build
+          git diff --exit-code src/data/elements.json

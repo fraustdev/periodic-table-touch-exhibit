@@ -12,7 +12,11 @@ import type { ExhibitEvent, PointerSample } from "./types";
 const CARBON = 6;
 const GOLD = 79;
 
-function sample(over: number | null, engaged: boolean, over_: Partial<PointerSample> = {}): PointerSample {
+function sample(
+  over: number | null,
+  engaged: boolean,
+  over_: Partial<PointerSample> = {},
+): PointerSample {
   return {
     point: over === null ? null : getCellCenter(over),
     engaged,
@@ -57,8 +61,10 @@ describe("interaction controller", () => {
   });
 
   it("arms without confirming when the press lands on an empty cell", () => {
-    const { state, events } = run([{ ...sample(CARBON, false), point: { x: 0.5, y: 0.01 } },
-      { ...sample(CARBON, true), point: { x: 0.5, y: 0.01 } }]);
+    const { state, events } = run([
+      { ...sample(CARBON, false), point: { x: 0.5, y: 0.01 } },
+      { ...sample(CARBON, true), point: { x: 0.5, y: 0.01 } },
+    ]);
     expect(state.phase).toBe("armed");
     expect(events).toHaveLength(0);
   });
@@ -75,7 +81,9 @@ describe("interaction controller", () => {
       [sample(CARBON, false), sample(CARBON, true), sample(GOLD, false), sample(GOLD, true)],
       [0, 0, 100, 200],
     );
-    expect(differentCell.events.filter((event) => event.type === "elementSelected")).toHaveLength(2);
+    expect(differentCell.events.filter((event) => event.type === "elementSelected")).toHaveLength(
+      2,
+    );
   });
 
   it("allows the same cell again once the debounce window passes", () => {

@@ -4,10 +4,7 @@ import { STAGE_LABELS, type HandFrame } from "../../adapters/HandInteractionSour
 import { EXHIBIT_CONFIG } from "../../domain/config";
 
 export type HandStatus =
-  | { kind: "off" }
-  | { kind: "loading" }
-  | { kind: "ready" }
-  | { kind: "error"; message: string };
+  { kind: "off" } | { kind: "loading" } | { kind: "ready" } | { kind: "error"; message: string };
 
 type Props = {
   open: boolean;
@@ -27,7 +24,6 @@ type Props = {
   stream: MediaStream | null;
   videoRef: React.RefObject<HTMLVideoElement | null>;
 };
-
 
 /**
  * Operator-only surface. Camera video and landmarks live in here and nowhere
@@ -88,7 +84,11 @@ export function SetupDrawer({
   const verdict = describeVerdict(frame);
 
   return (
-    <aside className={`drawer${open ? " drawer--open" : ""}`} aria-hidden={!open} aria-label="Exhibit setup">
+    <aside
+      className={`drawer${open ? " drawer--open" : ""}`}
+      aria-hidden={!open}
+      aria-label="Exhibit setup"
+    >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
         <h2>Setup</h2>
         <button className="drawer-toggle" onClick={onClose}>
@@ -97,8 +97,8 @@ export function SetupDrawer({
       </div>
 
       <p>
-        The exhibit is fully operable with a mouse. Hand tracking is an optional input driver and can
-        be enabled here.
+        The exhibit is fully operable with a mouse. Hand tracking is an optional input driver and
+        can be enabled here.
       </p>
 
       {status.kind === "error" && <div className="notice">{status.message}</div>}
@@ -110,8 +110,8 @@ export function SetupDrawer({
       )}
       {status.kind === "ready" && calibrationSource === "default" && (
         <div className="notice">
-          Using the default camera region: the middle of the frame maps to the whole table. Calibrate
-          the corners if the pointer feels offset, or if the camera is off to one side.
+          Using the default camera region: the middle of the frame maps to the whole table.
+          Calibrate the corners if the pointer feels offset, or if the camera is off to one side.
         </div>
       )}
 
@@ -147,11 +147,7 @@ export function SetupDrawer({
               ? "Restart camera"
               : "Enable camera"}
         </button>
-        <button
-          className="button"
-          onClick={onStartCalibration}
-          disabled={status.kind !== "ready"}
-        >
+        <button className="button" onClick={onStartCalibration} disabled={status.kind !== "ready"}>
           Calibrate corners
         </button>
         {calibrationSource === "corners" && (
@@ -255,8 +251,8 @@ export function SetupDrawer({
       )}
 
       <p style={{ fontSize: "0.6875rem" }}>
-        Thresholds: engage at {EXHIBIT_CONFIG.pinchEngage}, release at {EXHIBIT_CONFIG.pinchRelease},
-        same-cell debounce {EXHIBIT_CONFIG.sameCellDebounceMs} ms. All in{" "}
+        Thresholds: engage at {EXHIBIT_CONFIG.pinchEngage}, release at {EXHIBIT_CONFIG.pinchRelease}
+        , same-cell debounce {EXHIBIT_CONFIG.sameCellDebounceMs} ms. All in{" "}
         <code>src/domain/config.ts</code>.
       </p>
     </aside>

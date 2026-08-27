@@ -8,11 +8,13 @@ describe("exhibit event validation", () => {
       atomicNumber: 6,
       timestamp: 1,
     });
-    expect(parseExhibitEvent({ type: "lightsPulse", category: "halogen", intensity: 0.5 })).toEqual({
-      type: "lightsPulse",
-      category: "halogen",
-      intensity: 0.5,
-    });
+    expect(parseExhibitEvent({ type: "lightsPulse", category: "halogen", intensity: 0.5 })).toEqual(
+      {
+        type: "lightsPulse",
+        category: "halogen",
+        intensity: 0.5,
+      },
+    );
   });
 
   it("rejects malformed messages", () => {
@@ -29,7 +31,8 @@ describe("exhibit event validation", () => {
       { type: "lightsPulse", category: "halogen", intensity: -0.1 },
       { type: "lightsPulse", category: "halogen" },
     ];
-    for (const value of rejected) expect(parseExhibitEvent(value), JSON.stringify(value)).toBeNull();
+    for (const value of rejected)
+      expect(parseExhibitEvent(value), JSON.stringify(value)).toBeNull();
   });
 });
 
