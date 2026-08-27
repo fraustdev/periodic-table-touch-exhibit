@@ -41,13 +41,20 @@ Open `/table`, then use **Setup → Open info display** and drag that window to 
 
 ## What this is proving
 
-The real installation is a 55-inch commercial touchscreen with physical WS2812-class LEDs around
-the bezel. That hardware does not exist yet, so this prototype exists to make the eventual port
-_boring_. Three seams are held deliberately narrow:
+The intended installation is a **projected surface selected by mid-air hand gesture**, with physical
+WS2812-class LEDs around the display edge and a mouse as the fallback input. Hand tracking is the
+shipping sensor, not a stand-in — which is why it is hardened rather than sketched.
+
+The same code also serves a **commercial touchscreen** through a `TouchDriver` implementing the same
+interface. Supporting both is the point: development and demos run on a laptop with a mouse, the
+installation runs on a camera, and a test asserts the two produce identical event sequences.
+
+That hardware does not exist yet, so this prototype exists to make the eventual port _boring_. Three
+seams are held deliberately narrow:
 
 | Seam             | Now                                               | Later                                       |
 | ---------------- | ------------------------------------------------- | ------------------------------------------- |
-| **Input**        | `MouseInteractionSource`, `HandInteractionSource` | `TouchDriver` — native touch events         |
+| **Input**        | `MouseInteractionSource`, `HandInteractionSource` | the same, plus `TouchDriver` for a panel    |
 | **Transport**    | `BrowserEventBus` over `BroadcastChannel`         | WebSocket to an authoritative local process |
 | **Light output** | 120 virtual pixels rendered as DOM segments       | serial frames to an LED controller          |
 

@@ -2,6 +2,19 @@
 
 What each part of this prototype becomes when the exhibit is actually installed somewhere.
 
+**Two deployment targets, one codebase.**
+
+- **A. Projected surface, mid-air hand gesture** (the intended design). A projector puts the table
+  on a wall or floor; a camera watches the visitor's hand; a pinch selects. A mouse remains the
+  fallback. MediaPipe is **the shipping sensor**, so the hand path is production code.
+- **B. Commercial touchscreen.** The same code through a `TouchDriver`. Kept as a live option
+  because it removes every optical problem projection has, at the cost of reach constraints and
+  daily cleaning.
+
+Where the two diverge, both are covered below. Everything above the driver boundary — the layout,
+the hit test, the interaction rules, the event contract, both displays, the light model — is
+identical for both, which is roughly three quarters of the code.
+
 The prototype was built so this document could be short. Three seams were kept deliberately
 narrow — **input**, **transport**, and **light output** — and everything on the other side of them
 is unaware of what the hardware is. This document walks each aspect of the system, says what ships,
@@ -25,18 +38,47 @@ parts before anyone buys anything.
 | Host              | A laptop                           | Fanless mini PC in the plinth               | Deployment only                                          |
 | Camera            | Required                           | Probably removed entirely                   | Delete the driver                                        |
 
-Two rows are genuine work: **transport** and **lighting**. Everything else is configuration,
-deployment, or deletion.
+Two rows are genuine work: **transport** and **lighting**. On target A the input path needs no code
+change at all — only physical mounting and a calibration pass.
 
 ---
 
-## 1. The table surface
+## 1. The interaction surface
 
 **Now:** a browser window. Pointer position arrives as normalized table-space coordinates from
 either `MouseInteractionSource` or `HandInteractionSource`.
 
+### Target A — projection plus gesture
+
+**On hardware:** a projector, a projection surface, and a camera positioned to see the visitor's
+hand. The browser runs full-screen on the projector output. **No code change** — the hand driver
+already in the repo is the shipping input.
+
+What actually needs solving is optical and physical, not software:
+
+- **Ambient light is the constraint.** Projection contrast dies in a bright gallery. Either the
+  space is controllable, or the projector has to be bright enough to win — check lumens against
+  the real room, not a spec sheet.
+- **Front throw means the visitor shadows the image.** A raised arm casts a shadow roughly where
+  they are pointing, which is the worst possible place. **Short-throw mounted high, or rear
+  projection, removes this.** Decide before anything is mounted.
+- **Camera placement is now a fixed installation decision**, not a laptop lid. It must see the
+  interaction volume, be lit well enough for tracking, and stay put — because calibration is keyed
+  to its geometry and a knock invalidates it.
+- **Hand lighting matters as much as image brightness.** Tracking needs the hand lit from the front.
+  A dim room helps projection and hurts tracking; these pull against each other and the balance is
+  found on site.
+- **Reach mostly stops being a problem.** Nobody touches anything, so the 760–1120 mm reach band
+  does not bind. Gesture is _more_ accessible on the reach axis than any touchscreen mount. What
+  replaces it is arm-raising stamina and the fact that **pinch is a gesture some visitors cannot
+  perform** — see the accessibility note below.
+- **No haptics at all.** There is no contact event, so visual and light confirmation are
+  load-bearing rather than decorative. This is the strongest argument for the LED surround.
+
+### Target B — touchscreen
+
 **On hardware:** a commercial-grade 55" LCD with a projected-capacitive (PCAP) touch overlay,
-mounted in a plinth.
+mounted in a plinth. One new driver file implementing `InteractionSource`.
 
 ### What changes in code
 
@@ -45,8 +87,10 @@ The reducer, the hit test, the debounce, the lighting, and both displays are unt
 already a test asserting that mouse and hand input produce byte-identical event sequences — touch
 joins that test as a third driver, and if it diverges the build fails.
 
-**Hover stops existing.** This is the one behavioural difference that matters. A finger has no
-hover state, so every affordance that currently appears on hover has to be reachable another way.
+**Hover stops existing on target B only.** Mid-air pointing has a genuine hover state — it is how a
+visitor aims, and the reticle depends on it. A finger on glass does not. So hover may carry meaning,
+but everything it conveys must also be reachable without it, or the touchscreen variant loses
+information.
 The prototype already anticipates this: the focus card repeats the current element in the grid's
 empty quadrant precisely because a finger occludes the cell it is pressing and everything for
 about 150 mm below it. Verify on the real panel with a real hand, not a mouse.
@@ -256,19 +300,29 @@ camera. That dependency cost real debugging time in the prototype, and none of i
 
 ---
 
-## 6. The camera — and whether to keep one
+## 6. The camera
 
-Touch replaces hand tracking, so the camera has no interaction role. Three options:
+### Target A — the camera is the sensor
 
-1. **Remove it.** Simplest, and my recommendation.
-2. **Keep it for presence detection** — wake from attract mode when someone approaches.
-3. **Keep hand tracking as a second input mode.** Appealing, and a liability: it is the least
-   reliable part of the prototype and would need lighting control the gallery will not give you.
+It stops being optional, and three things change:
 
-If presence detection is wanted, **use a time-of-flight or PIR sensor rather than a camera.** A
-camera pointed at visitors in a public institution brings signage obligations and possibly a data
-protection assessment, and it invites a question you do not want to answer at a launch. A £5 ToF
-sensor answers "is someone there" without any of that.
+- **Fixed mounting, documented geometry.** Calibration is keyed to the camera. If it moves, the
+  calibration is invalid — which the code already detects and falls back to the default region for,
+  but a visitor sees a pointer that is subtly wrong. Mount it so it cannot be nudged.
+- **Resolution and frame rate over megapixels.** Tracking wants 30 fps and a clean image at the
+  working distance. A wide field of view helps coverage and hurts precision at the edges.
+- **Privacy is a real obligation, not a formality.** A camera watching visitors in a public
+  institution needs signage, and depending on jurisdiction a data protection assessment. The
+  defensible position is strong and worth stating plainly: **frames are processed on-device, nothing
+  is recorded, nothing leaves the machine, and only a fingertip coordinate reaches the application.**
+  That is architecturally true here — no landmark crosses out of the adapter layer — so it is a claim
+  the code backs up. Get it in writing before launch.
+
+### Target B — the camera goes
+
+Touch replaces it and the driver is deleted, along with MediaPipe and its WebGL dependency. If
+presence detection is still wanted for attract mode, **use a time-of-flight or PIR sensor rather
+than a camera** — it answers "is someone there" without any of the obligations above.
 
 ---
 
@@ -332,10 +386,12 @@ These block real work, in rough priority order:
 
 ## Honest accounting: what gets thrown away
 
-Roughly a quarter of the current code is prototype scaffolding that does not ship:
+On target A almost everything ships; the throw-away list is short. On target B roughly a quarter of
+the current code is scaffolding:
 
-- `HandInteractionSource`, `handMath`, the whole calibration subsystem, the camera preview, the
-  WebGL preflight, and the synthetic-camera test harness
+- **On target B only:** `HandInteractionSource`, `handMath`, the calibration subsystem, the camera
+  preview, and the WebGL preflight. **On target A all of it ships** — it is the input path.
+- The synthetic-camera test harness, either way
 - `BrowserEventBus`, replaced by a socket transport implementing the same interface
 - `CanvasPreviewSink`, replaced by a serial sink
 

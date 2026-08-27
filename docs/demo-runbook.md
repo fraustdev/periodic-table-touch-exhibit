@@ -28,7 +28,8 @@ npm run dev
 ## Sequence
 
 **1. Let it sit for a moment.** The idle table, the ambient surround. Say what it is: a screen-only
-prototype of a 55" museum touchscreen with addressable LEDs around the bezel.
+prototype of a projected museum installation, selected by mid-air hand gesture, with addressable
+LEDs around the display edge.
 
 **2. Hover across a few elements.** Point out that the whole group and period illuminate — the
 cheapest teaching feature in the build. Note the readout in the table's empty quadrant, and _why_ it
@@ -43,10 +44,14 @@ number.
 **4. Select neon, then uranium.** Different category, different accent colour across all three
 surfaces from one shared policy.
 
-**5. Now the hand.** Point and pinch. Say the important part out loud: **this is a prototype input
-driver, not the shipping sensor.** No landmark ever crosses out of the adapter layer — the only
-thing that leaves is a pointer sample in normalized table space, which is exactly what a touch
-driver emits. There's a test asserting mouse and hand produce byte-identical event sequences.
+**5. Now the hand.** Point and pinch. Say the important part out loud: **this is the shipping input,
+not a gimmick** — the installation is projected and gesture-driven, so this is the real interaction,
+being developed against a laptop webcam.
+
+The seam still matters, and it matters _today_: no landmark ever crosses out of the adapter layer.
+The only thing that leaves is a pointer sample in normalized surface space, which is why the mouse
+is a genuine fallback rather than a separate code path, and why a touchscreen variant is one new
+file. There's a test asserting mouse and hand produce byte-identical event sequences.
 
 **6. Reload the info window while they watch.** It comes back with the current element. Small, and
 it's the difference between an exhibit and a demo.
@@ -94,7 +99,7 @@ Say it plainly, it lands better than deflecting:
   118/118 correct
 - **73 tests**, CI green on format, typecheck, test, build, and dataset reproducibility
 - **120 virtual LEDs**, addressed by normalized arc length so the same effect drives a real strip of
-  any length — about 230 at 60/m around a 55" bezel
+  any length — about 230 at 60/m around a 55" display edge
 - **~half a day** to swap `BroadcastChannel` for the authoritative local process, because the event
   contract is already the wire format
 - **Roughly a quarter of the code doesn't ship** — and all of it sits behind the three seams

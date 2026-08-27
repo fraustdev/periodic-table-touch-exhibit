@@ -9,8 +9,9 @@ Read this before changing something that looks odd. Several odd-looking choices 
 
 ## 1. The prototype is screen-only, and models hardware it does not have
 
-**Decision.** Build a browser prototype whose structure mirrors the eventual 55" touchscreen and
-physical LED strip, rather than the structure a web app would naturally take.
+**Decision.** Build a browser prototype whose structure mirrors the eventual installation — a
+projected surface driven by mid-air hand gesture, with a physical LED strip — rather than the
+structure a web app would naturally take. The same structure also serves a touchscreen variant.
 
 **Why.** The prototype's job is not to be the exhibit. It is to make the exhibit's construction
 obvious rather than surprising — so that when the panel and the strip arrive, nothing has to be
@@ -54,7 +55,8 @@ driver became a config change.
 `reduceInteraction`. A test asserts they produce byte-identical event sequences.
 
 **Why.** Two input paths drift. A React click handler would work today and silently diverge from the
-gesture path within a week, and the divergence would only surface on the real touchscreen.
+gesture path within a week, and the divergence would only surface on the installed hardware, where
+the mouse is the fallback everyone falls back to.
 
 **Cost.** More indirection than a click handler. Genuinely more code.
 
@@ -90,7 +92,8 @@ Deferring it past the LED build is what makes it expensive.
 
 **Decision.** The engage edge commits the selection.
 
-**Why.** It feels immediate, and it matches what a touchscreen driver naturally reports.
+**Why.** It feels immediate, and it matches what both a pinch gesture and a touch driver naturally
+report.
 
 **The counter-argument, which is real.** WCAG 2.5.2 Pointer Cancellation (Level A) treats
 down-to-commit as a conformance failure: a visitor who touches the wrong cell has no way to abort.

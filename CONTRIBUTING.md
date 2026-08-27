@@ -23,13 +23,14 @@ npm run format       # Prettier, enforced in CI
 
 ## The one idea worth understanding
 
-This is a prototype of a **physical museum installation**: a 55" touchscreen with addressable LEDs
-around the bezel. None of that hardware exists yet.
+This is a prototype of a **physical museum installation**: a projected surface selected by mid-air
+hand gesture, with addressable LEDs around the display edge. A mouse is the fallback and the
+development input. The same code also serves a touchscreen. None of that hardware exists yet.
 
 So the codebase is organised around **three replaceable seams** — input, transport, and light
 output. Everything on the far side of a seam is unaware of what the hardware is. That's why you can
-work on the lighting without reading any hand-tracking code, and why swapping MediaPipe for native
-touch is one new file rather than a rewrite.
+work on the lighting without reading any hand-tracking code, and why adding native touch as a third
+input is one new file rather than a rewrite.
 
 `docs/hardware-translation.md` maps every part of the prototype onto the real installation, and is
 honest about the two places where code genuinely has to change.

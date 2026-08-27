@@ -5,9 +5,18 @@ reasonable-looking changes that quietly break the thing the project is for.
 
 ## What this is
 
-A screen-only prototype of a **museum periodic-table installation**. The real build is a 55"
-commercial touchscreen with physical WS2812-class LEDs around the bezel. This prototype exists to
-make that hardware port obvious rather than surprising. See `docs/hardware-translation.md`.
+A screen-only prototype of a **museum periodic-table installation** with physical WS2812-class LEDs
+around the display edge.
+
+**Primary target: a projected surface, selected by mid-air hand gesture**, with a mouse as the
+development and fallback input. MediaPipe hand tracking is therefore **the shipping sensor, not a
+stand-in**.
+
+**Alternative target: a commercial touchscreen**, which the same code serves through a `TouchDriver`
+implementing the same interface. Supporting both is the point of the input seam, and it is why the
+demo can run on a laptop with a mouse while the installation runs on a camera.
+
+See `docs/hardware-translation.md` for what each part becomes on either.
 
 It is **not** a web app that happens to look like an exhibit. Decisions that would be right for a
 web app are often wrong here, and vice versa.
@@ -38,8 +47,10 @@ deleted. Add one when the serial sink arrives and there are two.
 2. **Mouse is not a shortcut.** There is no `onClick` on a cell. Both inputs go through
    `reduceInteraction`, and a test asserts they emit byte-identical event sequences. Do not add a
    React click handler to bypass it.
-3. **Hover must never carry meaning.** The real device is a touchscreen and has no hover. Hover may
-   only amplify something already conveyed another way.
+3. **Hover may inform, but never exclusively.** Mid-air pointing has a real hover state — it is how
+   a visitor aims, and the reticle depends on it. A touchscreen has none. So hover is free to carry
+   meaning, provided everything it conveys is also reachable without it. Never make hover the only
+   route to information.
 4. **Colour never carries meaning alone.** Every category is also printed as text on every surface
    that shows it.
 5. **Lighting effects address normalized arc length, never an LED index.** No effect may contain
