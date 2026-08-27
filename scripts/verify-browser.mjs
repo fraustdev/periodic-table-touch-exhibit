@@ -30,7 +30,7 @@ function expect(condition, message) {
 // ---------------------------------------------------------------------------
 
 check("both routes load with no console errors", async ({ context }) => {
-  for (const route of ["/table", "/info"]) {
+  for (const route of ["/table", "/info", "/exhibit"]) {
     const page = await context.newPage();
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
@@ -44,7 +44,7 @@ check("both routes load with no console errors", async ({ context }) => {
     await page.close();
     expect(errors.length === 0, `${route} logged: ${errors.join(" | ")}`);
   }
-  return "no errors on /table or /info";
+  return "no errors on /table, /info or /exhibit";
 });
 
 check("all 118 elements render exactly once", async ({ table }) => {
@@ -267,6 +267,47 @@ check("hand tracking degrades to a working mouse exhibit", async ({ context }) =
   await page.close();
   expect(still === "Silver", `mouse selection broke when the camera failed (got ${still})`);
   return "clear message, and the mouse exhibit still works";
+});
+
+check("the paired route runs the exhibit in one window", async ({ context }) => {
+  // The panels share a document here but must still share nothing else: the
+  // selection has to travel over the bus, and the label must fit the column it
+  // was given. Both of those broke the first time this route existed.
+  const page = await context.newPage();
+  await page.goto(BASE + "/exhibit");
+  await page.waitForTimeout(600);
+
+  const regions = await page.evaluate(() => ({
+    mains: document.querySelectorAll("main").length,
+    table: !!document.querySelector(".pair__panel--table .stage"),
+    info: !!document.querySelector(".pair__panel--info .label"),
+  }));
+  expect(regions.table && regions.info, "both panels should mount");
+  expect(regions.mains === 0, `a document may only have one main; found ${regions.mains}`);
+
+  await page.locator('[data-symbol="Au"]').click();
+  await page.waitForTimeout(500);
+
+  const symbol = await page.locator(".pair__panel--info .specimen__symbol").innerText();
+  expect(symbol.trim() === "Au", `the label should have received the selection, got "${symbol}"`);
+
+  // Nothing in the label may spill outside its own column. `.atmosphere` is the
+  // full-bleed backdrop and is excluded by design.
+  const spill = await page.evaluate(() => {
+    const panel = document.querySelector(".pair__panel--info");
+    const bounds = panel.getBoundingClientRect();
+    return [...panel.querySelectorAll("*")]
+      .filter((el) => !el.classList.contains("atmosphere"))
+      .map((el) => ({ cls: el.className.toString(), box: el.getBoundingClientRect() }))
+      .filter(
+        ({ box }) => box.width > 0 && (box.right > bounds.right + 1 || box.left < bounds.left - 1),
+      )
+      .map(({ cls }) => cls);
+  });
+  expect(spill.length === 0, `the label overflows its column: ${spill.join(", ")}`);
+
+  await page.close();
+  return `both panels in one document, selection crossed the bus, label fits its column`;
 });
 
 check("reduced motion is honoured", async ({ context }) => {

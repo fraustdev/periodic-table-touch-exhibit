@@ -1150,12 +1150,13 @@ button {
    ============================================================ */
 
 .label {
+  container: label / inline-size;
   position: relative;
   z-index: 1;
   height: 100%;
   display: grid;
   grid-template-rows: auto 1fr auto;
-  padding: clamp(1.5rem, 4vh, 3.5rem) clamp(1.5rem, 5vw, 5rem);
+  padding: clamp(1.5rem, 4vh, 3.5rem) clamp(1.5rem, 5cqi, 5rem);
   gap: clamp(1rem, 3vh, 2.5rem);
 }
 
@@ -1170,7 +1171,7 @@ button {
 .label__attract h1 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(2rem, 5vw, 4rem);
+  font-size: clamp(2rem, 5cqi, 4rem);
   font-weight: 400;
   line-height: 1.05;
   animation: breathe 5s var(--ease-in-out) infinite;
@@ -1180,11 +1181,14 @@ button {
   display: grid;
   grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
   align-items: center;
-  gap: clamp(1.5rem, 5vw, 5rem);
+  gap: clamp(1.5rem, 5cqi, 5rem);
   min-height: 0;
 }
 
-@media (max-width: 900px) {
+/* The panel stacks when the panel is narrow — which is a different question
+   from whether the window is narrow, and the reason this is a container query.
+   On the paired route the window is wide and this panel is a column. */
+@container label (max-width: 900px) {
   .specimen {
     grid-template-columns: 1fr;
     align-content: center;
@@ -1217,7 +1221,7 @@ button {
 
 .specimen__z {
   font-family: var(--font-mono);
-  font-size: clamp(0.75rem, 1.2vw, 1rem);
+  font-size: clamp(0.75rem, 1.2cqi, 1rem);
   letter-spacing: 0.24em;
   color: var(--accent);
 }
@@ -1226,7 +1230,7 @@ button {
   position: relative;
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(7rem, 25vw, 23rem);
+  font-size: clamp(7rem, 25cqi, 23rem);
   line-height: 0.78;
   font-weight: 400;
   color: var(--bone-100);
@@ -1236,7 +1240,7 @@ button {
 .specimen__name {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(1.75rem, 4vw, 3.25rem);
+  font-size: clamp(1.75rem, 4cqi, 3.25rem);
   font-weight: 400;
   font-style: italic;
   color: var(--bone-200);
@@ -1273,7 +1277,7 @@ button {
 
 .specimen__blurb {
   margin: 0;
-  font-size: clamp(1.1rem, 2.05vw, 1.8rem);
+  font-size: clamp(1.1rem, 2.05cqi, 1.8rem);
   line-height: 1.4;
   font-weight: 300;
   color: var(--bone-100);
@@ -1289,7 +1293,7 @@ button {
 
 .factbox p {
   margin: 0;
-  font-size: clamp(0.9rem, 1.25vw, 1.1rem);
+  font-size: clamp(0.9rem, 1.25cqi, 1.1rem);
   line-height: 1.5;
   color: var(--bone-200);
   font-style: italic;
@@ -1321,7 +1325,7 @@ button {
 .datarail dd {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: clamp(0.7rem, 0.95vw, 0.85rem);
+  font-size: clamp(0.7rem, 0.95cqi, 0.85rem);
   font-variant-numeric: tabular-nums;
   color: var(--bone-200);
   overflow-wrap: break-word;
@@ -1500,12 +1504,6 @@ button {
     color-mix(in oklab, var(--bone-100) 12%, transparent) 82%,
     transparent
   );
-}
-
-/* The interpretation panel is a column here, not a full display, so its
-   editorial measure has to give. */
-.pair__panel--info .label {
-  padding-inline: clamp(1rem, 2vw, 1.75rem);
 }
 
 @media (max-width: 1180px) {
