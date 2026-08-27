@@ -28,13 +28,18 @@ Open `/table`, then use **Setup → Open info display** and drag that window to 
 
 ## Documentation
 
+**New to this repo?** Start with [`CONTRIBUTING.md`](CONTRIBUTING.md) — it is the handoff document
+for a human, and it is a fifteen-minute read. If you are working here with Claude Code,
+[`CLAUDE.md`](CLAUDE.md) loads automatically and is the handoff document for the agent. Everything
+else below is reference.
+
 | Document                                                       | For                                                              |
 | -------------------------------------------------------------- | ---------------------------------------------------------------- |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md)                           | Picking this up as a teammate. A fifteen-minute tour.            |
-| [`CLAUDE.md`](CLAUDE.md)                                       | Invariants and conventions, written for AI collaborators.        |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md)                           | **Start here.** Handoff for a human teammate.                    |
+| [`CLAUDE.md`](CLAUDE.md)                                       | **Handoff for an AI collaborator.** Invariants and conventions.  |
 | [`docs/decisions.md`](docs/decisions.md)                       | Why things are the way they are, and what would change our mind. |
 | [`docs/hardware-translation.md`](docs/hardware-translation.md) | What each part becomes on the real installation.                 |
-| [`docs/demo-runbook.md`](docs/demo-runbook.md)                 | Running this live: sequence, talking points, recovery.           |
+| [`docs/demo-runbook.md`](docs/demo-runbook.md)                 | Presenting it live. For the operator, not a contributor.         |
 | [`docs/how-this-was-built.md`](docs/how-this-was-built.md)     | The process, including the wrong turns.                          |
 | [`docs/design-spec.md`](docs/design-spec.md)                   | The original design specification.                               |
 | [`docs/implementation-plan.md`](docs/implementation-plan.md)   | The task-by-task build plan that was executed.                   |
