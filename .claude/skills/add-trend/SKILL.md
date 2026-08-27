@@ -33,11 +33,38 @@ Available numeric fields: `meltK`, `boilK`, `density`, `electronegativity`, `ato
 
 ## 2. Decide linear or log — this is the real judgement call
 
-**If the range spans more than about two orders of magnitude, use `log`.** Density runs 0.09 to 40,
-and on a linear ramp every element except the heavy metals renders identically. Melting point runs
-0.95 K to 3695 K and reads fine linearly.
+**Do not decide from the range.** Melting point spans a ratio of 3889 and reads correctly on a
+linear scale; boiling point spans 1469 and also reads correctly linearly. Range alone would send you
+to a log scale for both and ruin them.
 
-Compute `max/min` and decide deliberately. Say which you chose and why.
+What matters is **where the values sit inside the range**. A scale is doing its job when the median
+element lands near the middle of the ramp, so roughly half the table falls either side of the
+midpoint and the colours actually spread. Compute both and pick the one closer to 0.5:
+
+```bash
+node -e "
+const e=require('./src/data/elements.json'); const f='FIELD';
+const v=e.map(x=>x[f]).filter(x=>x!=null).sort((a,b)=>a-b);
+const min=v[0], max=v.at(-1), med=v[Math.floor(v.length/2)];
+console.log('median @ linear', ((med-min)/(max-min)).toFixed(3));
+console.log('median @ log   ', ((Math.log(med)-Math.log(min))/(Math.log(max)-Math.log(min))).toFixed(3));
+"
+```
+
+Measured for the existing fields:
+
+| field             | median @ linear | median @ log | choice  |
+| ----------------- | --------------- | ------------ | ------- |
+| meltK             | 0.317           | 0.861        | linear  |
+| boilK             | 0.442           | 0.888        | linear  |
+| density           | 0.192           | 0.731        | **log** |
+| electronegativity | 0.257           | 0.440        | linear  |
+
+**One override:** a log scale only makes sense for a quantity with a true zero and meaningful
+ratios. Electronegativity is a dimensionless comparative scale, so log is meaningless there even
+though the number above is closer to 0.5. Physical sense beats the arithmetic.
+
+Say which you chose and quote the two numbers.
 
 ## 3. Add the entry
 

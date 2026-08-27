@@ -17,4 +17,17 @@ describe("App routes", () => {
     render(<App path="/" />);
     expect(screen.getByRole("main", { name: /periodic table display/i })).toBeInTheDocument();
   });
+
+  it("renders both displays on the paired route", () => {
+    render(<App path="/exhibit" />);
+    expect(screen.getByRole("region", { name: /periodic table display/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: /element information display/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("leaves the paired route with no main landmark, because a document may only have one", () => {
+    render(<App path="/exhibit" />);
+    expect(screen.queryByRole("main")).not.toBeInTheDocument();
+  });
 });
