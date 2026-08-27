@@ -602,16 +602,26 @@ button {
 
 .trend-switch {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 0.3rem;
+  gap: 0.35rem;
+}
+
+.trend-switch__label {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--bone-600);
+  margin-right: 0.25rem;
 }
 
 .trend-switch__option {
   font-family: var(--font-mono);
-  font-size: 0.5625rem;
-  letter-spacing: 0.13em;
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  padding: 0.28rem 0.6rem;
+  padding: 0.36rem 0.75rem;
   border: var(--rule);
   border-radius: 100px;
   color: var(--bone-600);
@@ -632,40 +642,115 @@ button {
   border-color: var(--bone-200);
 }
 
-.trend-scale {
+/* ---------- the calibrated scale ---------- */
+
+.scale-gauge {
   display: grid;
   gap: 0.3rem;
-  max-width: min(520px, 52vw);
+  width: min(100%, 34ch);
 }
 
-.trend-scale__bar {
-  height: 6px;
-  border-radius: 3px;
-  border: 1px solid color-mix(in oklab, var(--bone-100) 12%, transparent);
+.scale-gauge__track {
+  position: relative;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid color-mix(in oklab, var(--bone-100) 16%, transparent);
 }
 
-.trend-scale__ends {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
+.scale-gauge__tick {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  width: 1px;
+  background: color-mix(in oklab, var(--ink-000) 45%, transparent);
+}
+
+/* Where the element under the pointer falls. Seeing the cell's colour and its
+   place on the scale together is what makes the colour legible. */
+.scale-gauge__marker {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--bone-100);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--ink-000) 70%, transparent);
+  animation: markerIn 260ms var(--ease-out);
+}
+
+@keyframes markerIn {
+  from {
+    opacity: 0;
+    transform: scaleY(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.scale-gauge__ticks {
+  position: relative;
+  height: 1em;
   font-family: var(--font-mono);
   font-size: 0.5rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--bone-400);
-}
-
-.trend-scale__note {
-  margin: 0;
+  letter-spacing: 0.06em;
   color: var(--bone-600);
-  text-transform: none;
-  letter-spacing: 0.04em;
-  font-size: 0.5625rem;
-  text-wrap: pretty;
 }
 
-.focus-card__readout {
+.scale-gauge__ticks span {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.scale-gauge__ticks span:first-child {
+  transform: none;
+}
+.scale-gauge__ticks span:last-child {
+  transform: translateX(-100%);
+}
+
+.scale-gauge--compact .scale-gauge__track {
+  height: 7px;
+}
+.scale-gauge--compact .scale-gauge__ticks {
+  display: none;
+}
+
+/* ---------- the quadrant in trend mode ---------- */
+
+.focus-card--trend {
+  gap: 0.5rem;
+}
+
+.focus-card__trend-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3.4vw, 3.1rem);
+  font-weight: 400;
+  line-height: 0.95;
+  color: var(--bone-100);
+}
+
+.focus-card__missing {
+  color: var(--bone-600);
+}
+
+/* The value is the story in trend mode, so it outranks the blurb. */
+.focus-card__reading {
+  display: grid;
+  gap: 0.3rem;
+  justify-items: start;
+}
+
+.focus-card__value {
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 3.8vw, 3.4rem);
+  font-weight: 400;
+  line-height: 0.9;
   color: var(--accent);
+  letter-spacing: -0.01em;
 }
 
 .legend {

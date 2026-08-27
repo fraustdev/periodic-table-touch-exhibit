@@ -19,9 +19,10 @@ appearing as a bare number._
 
 ![The table coloured by melting point](docs/images/trend-melting.jpg)
 
-_A trend overlay. Recolouring by melting point makes the refractory metals appear as a bright ridge
-through the middle of the d-block — the layout stops being a convention and becomes visible physics.
-Elements with no measured value stay grey rather than being given an invented one._
+_A trend overlay. The table's empty quadrant reports whatever is currently being looked at — here,
+the property doing the colouring, with a calibrated scale. Recolouring by melting point makes the
+refractory metals appear as a bright ridge through the middle of the d-block. Hovering an element
+replaces this with its value as a hero number and a marker showing where it falls on the scale._
 
 ```bash
 npm install
@@ -124,8 +125,10 @@ which turns the layout into visible physics. Press `t` to cycle, or use the swit
   everything except the heavy metals identically.
 - **Unmeasured is shown as unmeasured.** Eleven elements have no measured melting point; they render
   grey rather than being given a fabricated value.
-- **Colour is never the only channel.** The focus card prints the value with units and the legend
-  becomes a labelled scale with the range's real endpoints.
+- **Colour is never the only channel.** With nothing hovered, the table's empty quadrant names the
+  property and shows a scale calibrated with real values. Hovering an element replaces that with its
+  value as a hero number, plus a marker on the scale — seeing a cell's colour and its position at the
+  same time is what makes the colour mean anything.
 - **Text contrast is measured, not assumed.** The ink is chosen by computing contrast against both a
   light and a dark option and taking the better one; a test walks the whole ramp.
 

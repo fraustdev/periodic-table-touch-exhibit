@@ -14,14 +14,75 @@ const PERIODS = [1, 2, 3, 4, 5, 6, 7];
  * on a cell hides the cell and everything just below it; this readout sits
  * where a hand cannot cover it.
  */
-function FocusCard({
-  element,
-  readout,
-}: {
-  element: ElementRecord | null;
-  readout?: string | null;
-}) {
+export type TrendView = {
+  label: string;
+  note: string;
+  gradient: string;
+  ticks: { at: number; label: string }[];
+  missing: number;
+  /** Reading for the element under the pointer, if there is one. */
+  reading: { value: string; position: number | null } | null;
+};
+
+/**
+ * A calibrated scale rather than a gradient swatch: hairline ticks with real
+ * values, and a marker for the element under the pointer. Seeing a cell's
+ * colour and its position on the scale at the same time is what makes the
+ * colour mean anything.
+ */
+function TrendScale({ trend, compact }: { trend: TrendView; compact?: boolean }) {
+  const position = trend.reading?.position ?? null;
+  return (
+    <div className={`scale-gauge${compact ? " scale-gauge--compact" : ""}`}>
+      <div className="scale-gauge__track" style={{ background: trend.gradient }}>
+        {trend.ticks.slice(1, -1).map((tick) => (
+          <span key={tick.at} className="scale-gauge__tick" style={{ left: `${tick.at * 100}%` }} />
+        ))}
+        {position !== null && (
+          <span className="scale-gauge__marker" style={{ left: `${position * 100}%` }} />
+        )}
+      </div>
+      <div className="scale-gauge__ticks">
+        {trend.ticks.map((tick) => (
+          <span key={tick.at} style={{ left: `${tick.at * 100}%` }}>
+            {tick.label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Repeats what is currently being looked at inside the table's own empty
+ * quadrant. A finger on a cell hides the cell and everything just below it;
+ * this readout sits where a hand cannot cover it.
+ *
+ * Two things can be "currently being looked at": an element, or — in trend
+ * mode with nothing hovered — the property doing the colouring.
+ */
+function FocusCard({ element, trend }: { element: ElementRecord | null; trend: TrendView | null }) {
   if (!element) {
+    if (trend) {
+      return (
+        <div className="focus-card focus-card--trend" key={`trend-${trend.label}`}>
+          <span className="eyebrow">Coloured by</span>
+          <h2 className="focus-card__trend-name">{trend.label}</h2>
+          <TrendScale trend={trend} />
+          <p className="focus-card__blurb">
+            {trend.note}
+            {trend.missing > 0 && (
+              <>
+                {" "}
+                <span className="focus-card__missing">
+                  {trend.missing} elements have no measured value and stay grey.
+                </span>
+              </>
+            )}
+          </p>
+        </div>
+      );
+    }
     return (
       <div className="focus-card focus-card--idle" key="idle" aria-hidden="true">
         <span className="focus-card__symbol">118 elements</span>
@@ -43,9 +104,17 @@ function FocusCard({
         <span className="eyebrow">{element.atomicMass} u</span>
         <span className="eyebrow">{getCategoryLabel(element.category)}</span>
         <span className="eyebrow">{element.phase}</span>
-        {readout && <span className="eyebrow focus-card__readout">{readout}</span>}
       </div>
-      <p className="focus-card__blurb">{element.blurb}</p>
+
+      {trend?.reading ? (
+        <div className="focus-card__reading">
+          <strong className="focus-card__value">{trend.reading.value}</strong>
+          <span className="eyebrow">{trend.label}</span>
+          <TrendScale trend={trend} compact />
+        </div>
+      ) : (
+        <p className="focus-card__blurb">{element.blurb}</p>
+      )}
     </div>
   );
 }
@@ -63,8 +132,11 @@ type Props = {
   colorFor?: (element: ElementRecord) => string;
   /** Legible text colour for a cell whose fill may be bright. */
   inkFor?: (element: ElementRecord) => string;
-  /** Extra line under the focus card, e.g. the active trend's value. */
-  readoutFor?: (element: ElementRecord) => string | null;
+  /**
+   * The active trend, if any. The table's empty quadrant reports whatever is
+   * currently being looked at — an element, or the property colouring it.
+   */
+  trendView?: TrendView | null;
   /** True while a trend is active, so non-element cells stop implying a family. */
   trendActive?: boolean;
   interaction: InteractionState;
@@ -78,7 +150,7 @@ type Props = {
  * testing, no gesture rules, no knowledge of where the pointer came from.
  */
 export const PeriodicTable = forwardRef<HTMLDivElement, Props>(function PeriodicTable(
-  { interaction, confirmToken, showReticle, colorFor, inkFor, readoutFor, trendActive = false },
+  { interaction, confirmToken, showReticle, colorFor, inkFor, trendView, trendActive = false },
   ref,
 ) {
   const cellColor = colorFor ?? ((element: ElementRecord) => getCategoryColor(element.category));
@@ -107,10 +179,7 @@ export const PeriodicTable = forwardRef<HTMLDivElement, Props>(function Periodic
         role="group"
         aria-label="Periodic table of the elements"
       >
-        <FocusCard
-          element={focusElement}
-          readout={focusElement ? readoutFor?.(focusElement) : null}
-        />
+        <FocusCard element={focusElement} trend={trendView ?? null} />
 
         {/* Conventional f-block stand-ins, so the main block reads correctly. */}
         {F_BLOCK_STANDINS.map((standin) => (

@@ -20,6 +20,7 @@ import {
   getTrend,
   normalizeTrend,
   trendColor,
+  scaleTicks,
   trendGradient,
   trendInk,
   trendRange,
@@ -169,16 +170,28 @@ export function TableDisplay() {
       trendActive ? trendInk(normalizeTrend(trend, range, element)) : "var(--bone-100)",
     [range, trend, trendActive],
   );
-  const readoutFor = useCallback(
-    (element: ElementRecord) => {
-      if (!trendActive) return null;
-      const value = trend.value(element);
-      return value === null
-        ? `${trend.label}: not measured`
-        : `${trend.label}: ${trend.format(value)}`;
-    },
-    [trend, trendActive],
-  );
+  const focused = interaction.hovered ?? interaction.selected;
+  const focusedElement = focused === null ? null : (getElement(focused) ?? null);
+
+  /** Everything the table's quadrant needs in order to explain the active mode. */
+  const trendView = useMemo(() => {
+    if (!trendActive) return null;
+    const raw = focusedElement ? trend.value(focusedElement) : null;
+    return {
+      label: trend.label,
+      note: trend.note,
+      gradient: trendGradient(),
+      ticks: scaleTicks(trend, range),
+      missing: range.missing,
+      reading: focusedElement
+        ? {
+            value: raw === null ? "Not measured" : trend.format(raw),
+            position: raw === null ? null : normalizeTrend(trend, range, focusedElement),
+          }
+        : null,
+    };
+  }, [focusedElement, range, trend, trendActive]);
+
   const surfaceBox = surfaceRef.current?.getBoundingClientRect();
 
   return (
@@ -220,7 +233,7 @@ export function TableDisplay() {
         ref={surfaceRef}
         colorFor={colorFor}
         inkFor={inkFor}
-        readoutFor={readoutFor}
+        trendView={trendView}
         trendActive={trendActive}
         interaction={interaction}
         confirmToken={confirmToken}
@@ -230,6 +243,7 @@ export function TableDisplay() {
       <footer className="footer">
         <div className="footer__left">
           <div className="trend-switch" role="group" aria-label="Colour the table by">
+            <span className="trend-switch__label">Coloured by</span>
             {TRENDS.map((option) => (
               <button
                 key={option.key}
@@ -242,19 +256,7 @@ export function TableDisplay() {
             ))}
           </div>
 
-          {trendActive ? (
-            <div className="trend-scale">
-              <div className="trend-scale__bar" style={{ background: trendGradient() }} />
-              <div className="trend-scale__ends">
-                <span>{trend.lowLabel}</span>
-                <span>{trend.highLabel}</span>
-              </div>
-              <p className="trend-scale__note eyebrow">
-                {trend.note}
-                {range.missing > 0 && ` ${range.missing} elements have no measured value.`}
-              </p>
-            </div>
-          ) : (
+          {!trendActive && (
             <div className="legend">
               {CATEGORY_ORDER.map((category) => (
                 <span
@@ -274,7 +276,9 @@ export function TableDisplay() {
         <p className={`prompt${handHasSelected ? " prompt--hidden" : ""}`}>
           {hand.status.kind === "ready"
             ? "Point, then pinch to choose."
-            : "Choose an element to begin."}
+            : trendActive
+              ? "Hover an element to read its value."
+              : "Choose an element — or press T to colour the table by a property."}
         </p>
       </footer>
 

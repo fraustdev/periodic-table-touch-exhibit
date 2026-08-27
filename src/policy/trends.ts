@@ -183,6 +183,35 @@ export function trendInk(position: number | null): string {
     : INK_LIGHT;
 }
 
+/**
+ * The value at a position on the scale — the inverse of normalizeTrend, so a
+ * scale can be labelled at intervals rather than only at its ends.
+ */
+export function valueAtPosition(trend: Trend, range: TrendRange, position: number): number {
+  const at = Math.min(1, Math.max(0, position));
+  if (trend.scale === "log") {
+    const floor = Math.max(range.min, Number.EPSILON);
+    const low = Math.log(floor);
+    const high = Math.log(Math.max(range.max, floor * 1.0001));
+    return Math.exp(low + (high - low) * at);
+  }
+  return range.min + (range.max - range.min) * at;
+}
+
+export type ScaleTick = { at: number; label: string };
+
+/**
+ * Labelled ticks for a calibrated scale. Four reads as a scale; more reads as
+ * clutter at this size, and two reads as a gradient swatch.
+ */
+export function scaleTicks(trend: Trend, range: TrendRange): ScaleTick[] {
+  if (trend.key === "category") return [];
+  return [0, 1 / 3, 2 / 3, 1].map((at) => ({
+    at,
+    label: trend.format(valueAtPosition(trend, range, at)),
+  }));
+}
+
 /** CSS gradient for the legend, sampled from the same ramp. */
 export function trendGradient(): string {
   const stops = RAMP.map(([at]) => `${trendColor(at)} ${Math.round(at * 100)}%`);

@@ -6,8 +6,10 @@ import {
   normalizeTrend,
   trendColor,
   trendGradient,
+  scaleTicks,
   trendInk,
   trendRange,
+  valueAtPosition,
   TRENDS,
 } from "./trends";
 
@@ -183,5 +185,47 @@ describe("legible ink", () => {
 
   it("has an ink for the no-data colour too", () => {
     expect(trendInk(null)).toMatch(/^#[0-9a-f]{6}$/i);
+  });
+});
+
+describe("calibrated scale", () => {
+  it("inverts the normalization, on both linear and log scales", () => {
+    for (const key of ["melting", "density", "electronegativity"] as const) {
+      const trend = getTrend(key);
+      const range = trendRange(trend);
+      for (const at of [0, 0.25, 0.5, 0.75, 1]) {
+        const value = valueAtPosition(trend, range, at);
+        const back = trend.scale === "log" ? value : value;
+        // Round-trip through the real element path by faking a record.
+        const position = normalizeTrend(trend, range, {
+          meltK: back,
+          density: back,
+          electronegativity: back,
+        } as never);
+        expect(position, `${key} @ ${at}`).toBeCloseTo(at, 5);
+      }
+    }
+  });
+
+  it("labels four ticks, ascending, with the trend's own units", () => {
+    const trend = getTrend("melting");
+    const ticks = scaleTicks(trend, trendRange(trend));
+    expect(ticks).toHaveLength(4);
+    expect(ticks.map((t) => t.at)).toEqual([0, 1 / 3, 2 / 3, 1]);
+    for (const tick of ticks) expect(tick.label).toMatch(/°C$/);
+  });
+
+  it("gives the category mode no scale at all", () => {
+    const trend = getTrend("category");
+    expect(scaleTicks(trend, trendRange(trend))).toEqual([]);
+  });
+
+  it("spaces log ticks by ratio, not by difference", () => {
+    const trend = getTrend("density");
+    const range = trendRange(trend);
+    const values = scaleTicks(trend, range).map((t) => valueAtPosition(trend, range, t.at));
+    // Equal ratios between successive ticks is what a log scale means.
+    const ratios = values.slice(1).map((v, i) => v / values[i]);
+    for (const ratio of ratios.slice(1)) expect(ratio).toBeCloseTo(ratios[0], 3);
   });
 });
