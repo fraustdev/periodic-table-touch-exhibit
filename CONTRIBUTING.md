@@ -16,11 +16,11 @@ a manually opened window in a different Chrome instance will never connect.
 The mouse works immediately. Hand tracking is optional and lives behind the Setup drawer.
 
 ```bash
-npm test             # 135 unit tests
+npm test             # 137 unit tests
 npm run build        # typecheck + production build
 npm run format       # Prettier, enforced in CI
 
-npm run verify:browser   # 9 browser checks against a running dev server
+npm run verify:browser   # 10 browser checks against a running dev server
 npm run verify           # everything: format, types, tests, build, browser
 ```
 
@@ -115,7 +115,7 @@ If you work here with Claude Code, the project ships its own configuration:
 
 ## Where the risk is
 
-`src/ui/table/TableDisplay.tsx` is the largest file at around 370 lines, and it is the composition
+`src/ui/table/TableDisplay.tsx` is the largest file at around 377 lines, and it is the composition
 root: it wires the drivers, the two hooks, and the three surfaces together. It is also the least
 directly tested file, because almost everything it coordinates is tested where that logic lives.
 

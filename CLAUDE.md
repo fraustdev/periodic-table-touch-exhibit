@@ -12,8 +12,8 @@ around the display edge.
 development and fallback input. MediaPipe hand tracking is therefore **the shipping sensor, not a
 stand-in**.
 
-**Alternative target: a commercial touchscreen**, which the same code serves through a `TouchDriver`
-implementing the same interface. Supporting both is the point of the input seam, and it is why the
+**Alternative target: a commercial touchscreen**, which the same code already serves through
+`TouchInteractionSource`, implementing the same interface as the mouse and hand drivers. Supporting both is the point of the input seam, and it is why the
 demo can run on a laptop with a mouse while the installation runs on a camera.
 
 See `docs/hardware-translation.md` for what each part becomes on either.
@@ -25,11 +25,11 @@ web app are often wrong here, and vice versa.
 
 Everything is arranged so three things can be replaced without touching anything else:
 
-| Seam         | Interface            | Now                    | Later                              |
-| ------------ | -------------------- | ---------------------- | ---------------------------------- |
-| Input        | `InteractionSource`  | mouse, MediaPipe hand  | native touch                       |
-| Transport    | `ExhibitEventBus`    | `BroadcastChannel`     | WebSocket to a local authority     |
-| Light output | `Pulse` + arc length | 120 virtual DOM pixels | serial frames to an LED controller |
+| Seam         | Interface            | Now                                  | Later                              |
+| ------------ | -------------------- | ------------------------------------ | ---------------------------------- |
+| Input        | `InteractionSource`  | mouse, hand, and touch — all shipped | (nothing left; this seam is done)  |
+| Transport    | `ExhibitEventBus`    | `BroadcastChannel`                   | WebSocket to a local authority     |
+| Light output | `Pulse` + arc length | 120 virtual DOM pixels               | serial frames to an LED controller |
 
 **If a change makes one of these seams leakier, it is the wrong change**, even if it is shorter.
 

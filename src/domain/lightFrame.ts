@@ -14,7 +14,7 @@
  * serial port is one class.
  */
 
-export type ChannelOrder = "GRB" | "GRBW" | "RGB" | "RGBW";
+type ChannelOrder = "GRB" | "GRBW" | "RGB" | "RGBW";
 
 /** Channels per pixel, by strip type. WS2812 is 3, SK6812 RGBW is 4. */
 export function channelCount(order: ChannelOrder): number {
@@ -54,7 +54,7 @@ export const DEFAULT_FRAME_OPTIONS: FrameOptions = {
 };
 
 /** Per-channel carry, so quantization error is spread across frames. */
-export type DitherState = Float32Array;
+type DitherState = Float32Array;
 
 export function createDitherState(options: FrameOptions): DitherState {
   return new Float32Array(options.pixelCount * channelCount(options.order));
@@ -64,7 +64,7 @@ export function createDitherState(options: FrameOptions): DitherState {
  * Linear-light values, `channelCount` floats per pixel, in RGB(W) order
  * regardless of what the strip wants. Reordering happens on the way out.
  */
-export type LinearFrame = Float32Array;
+type LinearFrame = Float32Array;
 
 export function createLinearFrame(options: FrameOptions): LinearFrame {
   return new Float32Array(options.pixelCount * channelCount(options.order));
@@ -229,7 +229,7 @@ export function parsePacket(packet: Uint8Array): Uint8Array | null {
  * Where bytes go. The preview renderer, a null sink, and an eventual serial
  * port all implement this; nothing upstream knows which is attached.
  */
-export interface PixelSink {
+interface PixelSink {
   readonly name: string;
   write(packet: Uint8Array): void;
 }

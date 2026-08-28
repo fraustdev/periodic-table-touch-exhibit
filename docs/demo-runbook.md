@@ -68,7 +68,7 @@ being developed against a laptop webcam.
 The seam still matters, and it matters _today_: no landmark ever crosses out of the adapter layer.
 The only thing that leaves is a pointer sample in normalized surface space, which is why the mouse
 is a genuine fallback rather than a separate code path, and why a touchscreen variant is one new
-file. There's a test asserting mouse and hand produce byte-identical event sequences.
+file. There's a test asserting mouse, hand, and touch all produce identical event sequences — three drivers, one reducer, not two.
 
 **7. Reload the info window while they watch.** It comes back with the current element. Small, and
 it's the difference between an exhibit and a demo.
@@ -112,7 +112,7 @@ Then `git log`. The commit messages carry the reasoning and, for fixes, the fail
 
 Say it plainly, it lands better than deflecting:
 
-- **`TableDisplay.tsx` is still the biggest file at ~370 lines.** It was 575 doing five jobs; the
+- **`TableDisplay.tsx` is still the biggest file at ~377 lines.** It was 575 doing five jobs; the
   camera lifecycle and the calibration flow are now hooks. It is the composition root, and it is the
   file most likely to accumulate again — `CONTRIBUTING.md` says so and says what to do instead.
 - **The transport still has to be replaced** with a local authoritative process before the LED build.
@@ -181,7 +181,7 @@ verification caught it. A demo where the safety net visibly works is not a faile
 
 - **118 elements**, all selectable — verified by clicking every one against the second display,
   118/118 correct
-- **135 unit tests plus 9 browser checks**; `npm run verify` runs everything in one command
+- **137 unit tests plus 10 browser checks**; `npm run verify` runs everything in one command
 - **Three input drivers** — mouse, hand, touch — asserted to produce identical event sequences
 - **CI green** on format, typecheck, tests, build, and dataset reproducibility
 - **120 virtual LEDs**, addressed by normalized arc length so the same effect drives a real strip of

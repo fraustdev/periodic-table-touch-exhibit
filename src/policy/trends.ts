@@ -11,7 +11,7 @@ import type { ElementRecord } from "../domain/types";
  */
 export type TrendKey = "category" | "melting" | "density" | "electronegativity";
 
-export type Trend = {
+type Trend = {
   key: TrendKey;
   label: string;
   /** Measured value, or null where none exists for this element. */
@@ -77,7 +77,7 @@ export function getTrend(key: TrendKey): Trend {
   return TRENDS.find((trend) => trend.key === key) ?? TRENDS[0];
 }
 
-export type TrendRange = { min: number; max: number; measured: number; missing: number };
+type TrendRange = { min: number; max: number; measured: number; missing: number };
 
 /** Observed range across every element that has a value, computed once. */
 export function trendRange(trend: Trend): TrendRange {
@@ -198,7 +198,7 @@ export function valueAtPosition(trend: Trend, range: TrendRange, position: numbe
   return range.min + (range.max - range.min) * at;
 }
 
-export type ScaleTick = { at: number; label: string };
+type ScaleTick = { at: number; label: string };
 
 /**
  * Labelled ticks for a calibrated scale. Four reads as a scale; more reads as

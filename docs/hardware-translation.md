@@ -7,7 +7,7 @@ What each part of this prototype becomes when the exhibit is actually installed 
 - **A. Projected surface, mid-air hand gesture** (the intended design). A projector puts the table
   on a wall or floor; a camera watches the visitor's hand; a pinch selects. A mouse remains the
   fallback. MediaPipe is **the shipping sensor**, so the hand path is production code.
-- **B. Commercial touchscreen.** The same code through a `TouchDriver`. Kept as a live option
+- **B. Commercial touchscreen.** The same code through `TouchInteractionSource`. Kept as a live option
   because it removes every optical problem projection has, at the cost of reach constraints and
   daily cleaning.
 

@@ -27,8 +27,8 @@ replaces this with its value as a hero number and a marker showing where it fall
 ```bash
 npm install
 npm run dev          # http://localhost:5173/table  and  /info
-npm test             # 135 unit tests
-npm run verify       # everything: format, types, tests, build, and 9 browser checks
+npm test             # 137 unit tests
+npm run verify       # everything: format, types, tests, build, and 10 browser checks
 npm run build
 ```
 
@@ -59,18 +59,18 @@ The intended installation is a **projected surface selected by mid-air hand gest
 WS2812-class LEDs around the display edge and a mouse as the fallback input. Hand tracking is the
 shipping sensor, not a stand-in — which is why it is hardened rather than sketched.
 
-The same code also serves a **commercial touchscreen** through a `TouchDriver` implementing the same
+The same code also serves a **commercial touchscreen** through `TouchInteractionSource`, implementing the same
 interface. Supporting both is the point: development and demos run on a laptop with a mouse, the
 installation runs on a camera, and a test asserts the two produce identical event sequences.
 
 That hardware does not exist yet, so this prototype exists to make the eventual port _boring_. Three
 seams are held deliberately narrow:
 
-| Seam             | Now                                               | Later                                       |
-| ---------------- | ------------------------------------------------- | ------------------------------------------- |
-| **Input**        | `MouseInteractionSource`, `HandInteractionSource` | the same, plus `TouchDriver` for a panel    |
-| **Transport**    | `BrowserEventBus` over `BroadcastChannel`         | WebSocket to an authoritative local process |
-| **Light output** | 120 virtual pixels rendered as DOM segments       | serial frames to an LED controller          |
+| Seam             | Now                                                             | Later                                       |
+| ---------------- | --------------------------------------------------------------- | ------------------------------------------- |
+| **Input**        | mouse, MediaPipe hand, **and native touch — all three shipped** | the same, nothing left to add               |
+| **Transport**    | `BrowserEventBus` over `BroadcastChannel`                       | WebSocket to an authoritative local process |
+| **Light output** | 120 virtual pixels rendered as DOM segments                     | serial frames to an LED controller          |
 
 Everything gesture-shaped stops at the driver boundary. No MediaPipe landmark ever reaches the
 interaction rules, the display, or the light layer — the only thing that crosses is a

@@ -14,7 +14,7 @@ import {
 import { reduceDwell, type DwellState } from "../domain/calibrationDwell";
 import type { Point } from "../domain/types";
 
-export type CalibrationRunState = {
+type CalibrationRunState = {
   /** Which corner is being captured, 0-indexed. */
   step: number;
   captured: Point[];
