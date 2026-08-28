@@ -1,0 +1,831 @@
+<title>Exhibit Briefing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+  rel="stylesheet"
+/>
+
+<style>
+  :root {
+    /* light palette (default / un-stamped) */
+    --ground: #faf6ef;
+    --surface: #f1ead9;
+    --surface-2: #e8dfc9;
+    --ink: #211b12;
+    --ink-dim: #5c5340;
+    --ink-faint: #8c8267;
+    --accent: #a9740f;
+    --accent-soft: #f4e6c4;
+    --risk: #b8341c;
+    --risk-soft: #f7ded4;
+    --good: #3f6b3a;
+    --good-soft: #e2ecdf;
+    --rule: rgba(33, 27, 18, 0.14);
+    --rule-strong: rgba(33, 27, 18, 0.26);
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0a0906;
+      --surface: #15120c;
+      --surface-2: #1d1810;
+      --ink: #f4eee2;
+      --ink-dim: #b9ae97;
+      --ink-faint: #837a64;
+      --accent: #d9b654;
+      --accent-soft: rgba(217, 182, 84, 0.14);
+      --risk: #e8613c;
+      --risk-soft: rgba(232, 97, 60, 0.16);
+      --good: #7fae7a;
+      --good-soft: rgba(127, 174, 122, 0.14);
+      --rule: rgba(244, 238, 226, 0.12);
+      --rule-strong: rgba(244, 238, 226, 0.22);
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0a0906;
+    --surface: #15120c;
+    --surface-2: #1d1810;
+    --ink: #f4eee2;
+    --ink-dim: #b9ae97;
+    --ink-faint: #837a64;
+    --accent: #d9b654;
+    --accent-soft: rgba(217, 182, 84, 0.14);
+    --risk: #e8613c;
+    --risk-soft: rgba(232, 97, 60, 0.16);
+    --good: #7fae7a;
+    --good-soft: rgba(127, 174, 122, 0.14);
+    --rule: rgba(244, 238, 226, 0.12);
+    --rule-strong: rgba(244, 238, 226, 0.22);
+    color-scheme: dark;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: var(--accent-soft);
+  }
+
+  a {
+    color: inherit;
+  }
+
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: clamp(1.25rem, 3vw, 2.5rem) clamp(1rem, 3vw, 2.5rem) 3rem;
+    display: grid;
+    gap: clamp(1rem, 2vw, 1.5rem);
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem 2rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+
+  .masthead h1 {
+    margin: 0;
+    font-family: "Instrument Serif", Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(1.5rem, 3vw, 2.1rem);
+    letter-spacing: 0.005em;
+  }
+
+  .masthead__meta {
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .masthead__meta strong {
+    color: var(--ink-dim);
+    font-weight: 500;
+  }
+
+  /* ---------- risk strip ---------- */
+
+  .risk {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.15rem 0.85rem;
+    padding: 0.85rem 1.1rem;
+    border: 1px solid color-mix(in oklab, var(--risk) 45%, transparent);
+    background: var(--risk-soft);
+    border-radius: 3px;
+  }
+
+  .risk__icon {
+    grid-row: 1 / 3;
+    align-self: center;
+    font-family: "Instrument Serif", Georgia, serif;
+    font-style: italic;
+    font-size: 1.9rem;
+    color: var(--risk);
+    line-height: 1;
+  }
+
+  .risk__label {
+    font-size: 0.6875rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--risk);
+    font-weight: 600;
+  }
+
+  .risk__body {
+    color: var(--ink);
+    font-size: 0.8125rem;
+  }
+
+  .risk__body b {
+    color: var(--ink);
+  }
+
+  .risk__quote {
+    margin-top: 0.35rem;
+    font-family: "Instrument Serif", Georgia, serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--ink-dim);
+    line-height: 1.4;
+  }
+
+  /* ---------- numbers strip ---------- */
+
+  .numbers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .numbers__cell {
+    background: var(--surface);
+    padding: 0.6rem 0.75rem;
+    display: grid;
+    gap: 0.2rem;
+  }
+
+  .numbers__value {
+    font-variant-numeric: tabular-nums;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .numbers__label {
+    font-size: 0.625rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* ---------- panel grid ---------- */
+
+  .panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  @media (max-width: 760px) {
+    .panels {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 1.1rem 1.15rem 1.25rem;
+    display: grid;
+    gap: 0.9rem;
+    align-content: start;
+  }
+
+  .panel__head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .panel__num {
+    font-family: "Instrument Serif", Georgia, serif;
+    font-style: italic;
+    font-size: 1.5rem;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .panel__title {
+    font-family: "Instrument Serif", Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.3rem;
+    color: var(--ink);
+  }
+
+  .group {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .group__label {
+    font-size: 0.625rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .group ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.3rem;
+  }
+
+  .group li {
+    padding-left: 0.85rem;
+    position: relative;
+    font-size: 0.8125rem;
+    color: var(--ink-dim);
+  }
+
+  .group li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.5em;
+    width: 4px;
+    height: 4px;
+    background: var(--accent);
+    opacity: 0.65;
+    border-radius: 1px;
+  }
+
+  .group li b,
+  .group li strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .group li code {
+    font-size: 0.78em;
+    color: var(--ink);
+    background: var(--surface-2);
+    padding: 0.05em 0.35em;
+    border-radius: 2px;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    letter-spacing: 0.04em;
+    padding: 0.08em 0.4em;
+    border-radius: 2px;
+    margin-left: 0.35em;
+    vertical-align: 1px;
+  }
+
+  .tag--good {
+    color: var(--good);
+    background: var(--good-soft);
+  }
+
+  .tag--accent {
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px dashed var(--rule);
+    margin: 0;
+  }
+
+  /* ---------- soundbites ---------- */
+
+  .soundbites {
+    display: grid;
+    gap: 0.7rem;
+  }
+
+  .soundbites__head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+
+  .soundbites__head .panel__num {
+    font-size: 1.2rem;
+  }
+
+  .soundbites__head h2 {
+    margin: 0;
+    font-family: "Instrument Serif", Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.15rem;
+    color: var(--ink);
+  }
+
+  .soundbite-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.7rem;
+  }
+
+  @media (max-width: 640px) {
+    .soundbite-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .soundbite {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 2px solid var(--accent);
+    border-radius: 2px;
+    padding: 0.65rem 0.85rem;
+    display: grid;
+    gap: 0.3rem;
+  }
+
+  .soundbite__q {
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .soundbite__a {
+    font-family: "Instrument Serif", Georgia, serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--ink);
+    line-height: 1.35;
+  }
+
+  footer {
+    text-align: center;
+    font-size: 0.6875rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.04em;
+    padding-top: 0.5rem;
+  }
+
+  @media print {
+    body {
+      background: #fff;
+      color: #111;
+      font-size: 11px;
+    }
+    .panel,
+    .numbers__cell,
+    .soundbite {
+      background: #fff !important;
+      border-color: #ccc !important;
+    }
+    .risk {
+      background: #fff !important;
+    }
+  }
+</style>
+
+<div class="page">
+  <header class="masthead">
+    <h1>Exhibit Briefing</h1>
+    <div class="masthead__meta">
+      <span><strong>Periodic Table</strong> — Touch Exhibit</span>
+      <span>github.com/fraustdev/periodic-table-touch-exhibit</span>
+      <span>tag <strong>demo-ready</strong></span>
+    </div>
+  </header>
+
+  <section class="risk">
+    <span class="risk__icon" aria-hidden="true">!</span>
+    <span class="risk__label">Before anything else</span>
+    <div class="risk__body">
+      <b>Do not open <code style="background: transparent; padding: 0">/exhibit</code></b> —
+      unreviewed side route, provenance unknown, two confirmed bugs (LED ring bleeds across the
+      whole window; shares its channel with
+      <code style="background: transparent; padding: 0">/table</code> +
+      <code style="background: transparent; padding: 0">/info</code>, so an open tab of either can
+      hijack it). Stick to <code style="background: transparent; padding: 0">/table</code> +
+      <code style="background: transparent; padding: 0">/info</code>.
+      <div class="risk__quote">
+        "I found a stray feature mid-session that didn't match anything I'd asked for, traced it,
+        confirmed two real bugs, and I'm not presenting it — that's the review process working."
+      </div>
+    </div>
+  </section>
+
+  <section class="numbers" aria-label="key numbers">
+    <div class="numbers__cell">
+      <div class="numbers__value">118</div>
+      <div class="numbers__label">elements</div>
+    </div>
+    <div class="numbers__cell">
+      <div class="numbers__value">3</div>
+      <div class="numbers__label">input drivers</div>
+    </div>
+    <div class="numbers__cell">
+      <div class="numbers__value">3</div>
+      <div class="numbers__label">seams</div>
+    </div>
+    <div class="numbers__cell">
+      <div class="numbers__value">137</div>
+      <div class="numbers__label">unit tests</div>
+    </div>
+    <div class="numbers__cell">
+      <div class="numbers__value">10</div>
+      <div class="numbers__label">browser checks</div>
+    </div>
+    <div class="numbers__cell">
+      <div class="numbers__value">1</div>
+      <div class="numbers__label">
+        <code style="background: transparent; padding: 0; color: inherit">npm run verify</code>
+      </div>
+    </div>
+    <div class="numbers__cell">
+      <div class="numbers__value">~230</div>
+      <div class="numbers__label">real LEDs (from 120)</div>
+    </div>
+    <div class="numbers__cell">
+      <div class="numbers__value">½ day</div>
+      <div class="numbers__label">transport migration</div>
+    </div>
+  </section>
+
+  <div class="panels">
+    <!-- 01 — HOW IT WORKS -->
+    <article class="panel">
+      <div class="panel__head">
+        <span class="panel__num">01</span>
+        <h2 class="panel__title">How the prototype works</h2>
+      </div>
+
+      <div class="group">
+        <div class="group__label">The two displays</div>
+        <ul>
+          <li>
+            <b>/table</b> — the grid. <b>/info</b> — an editorial label. Never share React state.
+          </li>
+          <li>
+            Talk over a validated event bus — malformed messages dropped silently, never shown.
+          </li>
+          <li>
+            A display that opens late, or reloads, <b>self-heals</b> — asks the table what's
+            current.
+          </li>
+        </ul>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="group">
+        <div class="group__label">Selection &amp; feedback</div>
+        <ul>
+          <li>
+            idle → hover → armed → confirmed → cooldown, debounced <b>per cell</b>, not globally.
+          </li>
+          <li>
+            Focus card sits in the table's own dead zone — repeats the element because a hand blocks
+            ~150 mm below where it presses.
+          </li>
+          <li>
+            Hover glows the whole <b>group + period</b> — periodic law made visible, cheapest win in
+            the build.
+          </li>
+          <li>
+            LED ring: 120 virtual pixels, pulse travels <b>both directions</b> from the pressed
+            edge.
+          </li>
+        </ul>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="group">
+        <div class="group__label">Trend overlays <span class="tag tag--accent">press T</span></div>
+        <ul>
+          <li>Recolor all 118 by melting point / density / electronegativity.</li>
+          <li>
+            Log vs. linear picked by <b>where the median lands</b>, not by the range — got this
+            wrong once, fixed against real data.
+          </li>
+          <li>No data → <b>grey</b>, never faked. 11 elements have no measured melting point.</li>
+        </ul>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="group">
+        <div class="group__label">Input &amp; calibration</div>
+        <ul>
+          <li>
+            Mouse / MediaPipe hand (point+pinch) / native touch — <b>one reducer</b>, provably
+            identical events.
+          </li>
+          <li>
+            Default center-region mapping works with <b>zero setup</b>; 4-corner calibration is an
+            optional refinement.
+          </li>
+          <li>Camera dies → always degrades to full mouse operation.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 02 — BACKEND & PROCESS -->
+    <article class="panel">
+      <div class="panel__head">
+        <span class="panel__num">02</span>
+        <h2 class="panel__title">Backend &amp; build process</h2>
+      </div>
+
+      <div class="group">
+        <div class="group__label">Order of operations</div>
+        <ul>
+          <li>
+            Spec + plan written <b>before</b> code — ~2 hrs to a verified, mouse-complete prototype.
+          </li>
+          <li>
+            Riskiest part (camera) built <b>last</b>, deliberately — mouse never blocked by it.
+          </li>
+          <li>
+            ~30+ commits, one bug or decision each — <code>git log</code> reads as a legible trail.
+          </li>
+        </ul>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="group">
+        <div class="group__label">Architecture</div>
+        <ul>
+          <li>
+            One reducer = single source of truth for every interaction rule — 108 lines, zero
+            browser deps.
+          </li>
+          <li><b>3 seams</b>, swap any one alone: Input · Transport · Light output.</li>
+          <li>
+            Every gesture threshold lives in <b>one config file</b> — no scattered magic numbers.
+          </li>
+        </ul>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="group">
+        <div class="group__label">Verification discipline</div>
+        <ul>
+          <li>
+            <code>npm run verify</code> — format + typecheck + 137 tests + build + 10 live browser
+            checks, one command.
+          </li>
+          <li>
+            Real bugs found by <b>reproducing</b>, not guessing — WebGL/canvas stub bug,
+            video↔overlay aspect mismatch, camera race, calibration averaging bug.
+          </li>
+        </ul>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="group">
+        <div class="group__label">Final pass, today</div>
+        <ul>
+          <li>
+            Ponytail audit (complexity) <span class="tag tag--good">clean</span> + 4 parallel
+            independent reviewers: efficiency lens, docs-vs-code, live walkthrough, accessibility.
+          </li>
+          <li>Two reviewers <b>independently</b> caught the same stale doc numbers — fixed.</li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 03 — HANDOFF -->
+    <article class="panel">
+      <div class="panel__head">
+        <span class="panel__num">03</span>
+        <h2 class="panel__title">Handoff considerations</h2>
+      </div>
+
+      <div class="group">
+        <div class="group__label">For a human</div>
+        <ul>
+          <li>
+            <code>CONTRIBUTING.md</code> — 15-min tour, names the exact 4 files that hold the whole
+            system.
+          </li>
+          <li>
+            <code>decisions.md</code> — 13+ decisions with rationale <b>and</b> "what would change
+            our mind." Stops someone "fixing" a deliberate choice.
+          </li>
+          <li>
+            Weak spot named <b>honestly</b>, not hidden — composition-root file, still biggest, but
+            575→377 lines.
+          </li>
+        </ul>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="group">
+        <div class="group__label">For an AI collaborator</div>
+        <ul>
+          <li>
+            <code>CLAUDE.md</code> auto-loads in any session — invariants land before message one.
+          </li>
+          <li>
+            <code>.claude/settings.json</code> — permission allowlist from <b>real usage</b>, not
+            guessed.
+          </li>
+          <li>
+            Deliberately excludes anything that runs arbitrary code — even my most-used tool —
+            because this file ships to every clone.
+          </li>
+        </ul>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="group">
+        <div class="group__label">Project skills shipped</div>
+        <ul>
+          <li><code>/verify-exhibit</code> — runs + interprets the suite.</li>
+          <li>
+            <code>/add-trend</code> — encodes the actual judgment calls: coverage floor,
+            log-vs-linear.
+          </li>
+        </ul>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="group">
+        <div class="group__label">Guardrails</div>
+        <ul>
+          <li>CI on every push — format, typecheck, tests, build, dataset reproducibility.</li>
+          <li>
+            "Deferred, not dismissed" table — scope cuts recorded with <b>why</b>, not silently
+            dropped.
+          </li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 04 — REAL INSTALLATION -->
+    <article class="panel">
+      <div class="panel__head">
+        <span class="panel__num">04</span>
+        <h2 class="panel__title">Translating to real hardware</h2>
+      </div>
+
+      <div class="group">
+        <div class="group__label">The two targets</div>
+        <ul>
+          <li>
+            <b>Primary:</b> projected surface + mid-air gesture. MediaPipe is the
+            <b>shipping sensor</b>, not a stand-in.
+          </li>
+          <li>
+            <b>Alt:</b> commercial touchscreen — same code, one driver file, already built + tested.
+          </li>
+        </ul>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="group">
+        <div class="group__label">Only 2 things are real remaining work</div>
+        <ul>
+          <li>
+            <b>Transport</b> → small local process. ~half a day — the event contract already
+            <i>is</i> the wire format.
+          </li>
+          <li>
+            <b>Physical LED strip</b> — sizing solved: ~230 LEDs @ 60/m for a 55" edge, 5 V @ 20–30
+            A, mid-run injection.
+          </li>
+        </ul>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="group">
+        <div class="group__label">Already built &amp; proven</div>
+        <ul>
+          <li>
+            Full LED wire pipeline vs. a null sink: linear light → gamma → dither → GRB order →
+            COBS+CRC16.
+          </li>
+          <li>
+            <code>npm run leds:demo</code> prints the <b>real bytes</b> a controller would receive.
+          </li>
+          <li>
+            115200 UART can't carry it — needs native USB (554 kbps at 60 fps). Found before the
+            bench, not on it.
+          </li>
+        </ul>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="group">
+        <div class="group__label">What changes physically</div>
+        <ul>
+          <li>
+            Camera becomes the real sensor — fixed mount. Privacy by architecture: no landmark ever
+            leaves the driver, nothing recorded.
+          </li>
+          <li>
+            Gesture removes the touchscreen reach-height problem — trades it for arm stamina + pinch
+            accessibility.
+          </li>
+          <li>Known pre-launch gap: WCAG 2.5.2 commit-on-press timing — small, understood fix.</li>
+          <li>
+            Type scale needs ~2–3× for real viewing distance — formula's already written down.
+          </li>
+          <li>
+            ~¼ of current code is prototype-only scaffolding — <b>expected</b> to be thrown away.
+          </li>
+        </ul>
+      </div>
+    </article>
+  </div>
+
+  <section class="soundbites">
+    <div class="soundbites__head">
+      <span class="panel__num">05</span>
+      <h2>If asked</h2>
+    </div>
+    <div class="soundbite-grid">
+      <div class="soundbite">
+        <div class="soundbite__q">How do you hand this off?</div>
+        <div class="soundbite__a">
+          "Three files, in order: CLAUDE.md loads itself, decisions.md, hardware-translation.md."
+        </div>
+      </div>
+      <div class="soundbite">
+        <div class="soundbite__q">What's weak right now?</div>
+        <div class="soundbite__a">
+          "The composition-root file's still the biggest thing here, and there's a known WCAG timing
+          gap I haven't closed."
+        </div>
+      </div>
+      <div class="soundbite">
+        <div class="soundbite__q">How did you use Claude efficiently?</div>
+        <div class="soundbite__a">
+          "Plan first, pure core first, reproduce before fixing, verify instead of assuming — and a
+          final multi-lens review before I ever opened this meeting."
+        </div>
+      </div>
+      <div class="soundbite">
+        <div class="soundbite__q">What about that /exhibit route?</div>
+        <div class="soundbite__a">
+          "Traced it, found two bugs, excluded it. That's not a gap — that's the process working."
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    compiled from the repo at github.com/fraustdev/periodic-table-touch-exhibit — commit ffcd28c
+  </footer>
+</div>

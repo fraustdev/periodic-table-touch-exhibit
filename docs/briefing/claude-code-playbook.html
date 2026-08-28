@@ -1,0 +1,781 @@
+<title>Claude Code Playbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+  rel="stylesheet"
+/>
+
+<style>
+  :root {
+    --ground: #faf6ef;
+    --surface: #f1ead9;
+    --surface-2: #e8dfc9;
+    --ink: #211b12;
+    --ink-dim: #5c5340;
+    --ink-faint: #8c8267;
+    --accent: #a9740f;
+    --accent-soft: #f4e6c4;
+    --risk: #b8341c;
+    --risk-soft: #f7ded4;
+    --good: #3f6b3a;
+    --good-soft: #e2ecdf;
+    --rule: rgba(33, 27, 18, 0.14);
+    --rule-strong: rgba(33, 27, 18, 0.26);
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0a0906;
+      --surface: #15120c;
+      --surface-2: #1d1810;
+      --ink: #f4eee2;
+      --ink-dim: #b9ae97;
+      --ink-faint: #837a64;
+      --accent: #d9b654;
+      --accent-soft: rgba(217, 182, 84, 0.14);
+      --risk: #e8613c;
+      --risk-soft: rgba(232, 97, 60, 0.16);
+      --good: #7fae7a;
+      --good-soft: rgba(127, 174, 122, 0.14);
+      --rule: rgba(244, 238, 226, 0.12);
+      --rule-strong: rgba(244, 238, 226, 0.22);
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0a0906;
+    --surface: #15120c;
+    --surface-2: #1d1810;
+    --ink: #f4eee2;
+    --ink-dim: #b9ae97;
+    --ink-faint: #837a64;
+    --accent: #d9b654;
+    --accent-soft: rgba(217, 182, 84, 0.14);
+    --risk: #e8613c;
+    --risk-soft: rgba(232, 97, 60, 0.16);
+    --good: #7fae7a;
+    --good-soft: rgba(127, 174, 122, 0.14);
+    --rule: rgba(244, 238, 226, 0.12);
+    --rule-strong: rgba(244, 238, 226, 0.22);
+    color-scheme: dark;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: var(--accent-soft);
+  }
+
+  code {
+    font-size: 0.9em;
+    color: var(--ink);
+    background: var(--surface-2);
+    padding: 0.05em 0.35em;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  .page {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: clamp(1.25rem, 3vw, 2.5rem) clamp(1rem, 3vw, 2.5rem) 3rem;
+    display: grid;
+    gap: clamp(1rem, 2vw, 1.4rem);
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem 2rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+
+  .masthead h1 {
+    margin: 0;
+    font-family: "Instrument Serif", Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(1.5rem, 3vw, 2.1rem);
+  }
+
+  .masthead__meta {
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .masthead__meta strong {
+    color: var(--ink-dim);
+    font-weight: 500;
+  }
+
+  /* ---------- thesis banner ---------- */
+
+  .thesis {
+    display: grid;
+    gap: 0.3rem;
+    padding: 0.9rem 1.1rem;
+    background: var(--accent-soft);
+    border: 1px solid color-mix(in oklab, var(--accent) 40%, transparent);
+    border-radius: 3px;
+  }
+
+  .thesis__label {
+    font-size: 0.6875rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .thesis__line {
+    font-family: "Instrument Serif", Georgia, serif;
+    font-style: italic;
+    font-size: 1.05rem;
+    color: var(--ink);
+    line-height: 1.4;
+  }
+
+  /* ---------- reminder chip ---------- */
+
+  .chip-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+    flex-wrap: wrap;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.3rem 0.65rem;
+    border: 1px solid color-mix(in oklab, var(--risk) 45%, transparent);
+    background: var(--risk-soft);
+    color: var(--risk);
+    border-radius: 100px;
+    font-size: 0.6875rem;
+    letter-spacing: 0.03em;
+    font-weight: 600;
+  }
+
+  /* ---------- pillars ---------- */
+
+  .pillars {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .pillar {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 1rem 1.15rem 1.1rem;
+    display: grid;
+    gap: 0.8rem;
+  }
+
+  .pillar__head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.65rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .pillar__num {
+    font-family: "Instrument Serif", Georgia, serif;
+    font-style: italic;
+    font-size: 1.6rem;
+    color: var(--accent);
+    line-height: 1;
+    flex: none;
+  }
+
+  .pillar__title-group {
+    display: grid;
+    gap: 0.1rem;
+  }
+
+  .pillar__title {
+    font-family: "Instrument Serif", Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.35rem;
+    color: var(--ink);
+  }
+
+  .pillar__sub {
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+    font-style: normal;
+  }
+
+  .pillar__body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem 1.4rem;
+  }
+
+  @media (max-width: 700px) {
+    .pillar__body {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .group {
+    display: grid;
+    gap: 0.35rem;
+    align-content: start;
+  }
+
+  .group__label {
+    font-size: 0.625rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .group ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.3rem;
+  }
+
+  .group li {
+    padding-left: 0.85rem;
+    position: relative;
+    font-size: 0.8125rem;
+    color: var(--ink-dim);
+  }
+
+  .group li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.5em;
+    width: 4px;
+    height: 4px;
+    background: var(--accent);
+    opacity: 0.65;
+    border-radius: 1px;
+  }
+
+  .group li b {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .evidence {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding-top: 0.7rem;
+    margin-top: 0.1rem;
+    border-top: 1px dashed var(--rule);
+    font-size: 0.75rem;
+  }
+
+  .evidence__label {
+    color: var(--good);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: 0.625rem;
+    flex: none;
+  }
+
+  .evidence code {
+    background: var(--good-soft);
+  }
+
+  /* ---------- soundbites ---------- */
+
+  .soundbites__head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+
+  .soundbites__head .pillar__num {
+    font-size: 1.2rem;
+  }
+
+  .soundbites__head h2 {
+    margin: 0;
+    font-family: "Instrument Serif", Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.15rem;
+    color: var(--ink);
+  }
+
+  .soundbite-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.7rem;
+    margin-top: 0.6rem;
+  }
+
+  @media (max-width: 640px) {
+    .soundbite-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .soundbite {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 2px solid var(--accent);
+    border-radius: 2px;
+    padding: 0.65rem 0.85rem;
+    display: grid;
+    gap: 0.3rem;
+  }
+
+  .soundbite__q {
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .soundbite__a {
+    font-family: "Instrument Serif", Georgia, serif;
+    font-style: italic;
+    font-size: 0.92rem;
+    color: var(--ink);
+    line-height: 1.35;
+  }
+
+  footer {
+    text-align: center;
+    font-size: 0.6875rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.04em;
+    padding-top: 0.5rem;
+  }
+
+  @media print {
+    body {
+      background: #fff;
+      color: #111;
+      font-size: 11px;
+    }
+    .pillar,
+    .soundbite {
+      background: #fff !important;
+      border-color: #ccc !important;
+    }
+    .thesis,
+    .chip {
+      background: #fff !important;
+    }
+  }
+</style>
+
+<div class="page">
+  <header class="masthead">
+    <h1>Claude Code Playbook</h1>
+    <div class="masthead__meta">
+      <span>companion to <strong>Exhibit Briefing</strong></span>
+      <span>github.com/fraustdev/periodic-table-touch-exhibit</span>
+    </div>
+  </header>
+
+  <div class="thesis">
+    <span class="thesis__label">The actual argument</span>
+    <span class="thesis__line"
+      >Not "here's the exhibit" — here's how the tool was operated to get it: which capability for
+      which job, what kept cost down, why it was fast enough to sell a customer on day one, why the
+      code was written for a physical object from the first prompt, and why a teammate can pick it
+      up cold.</span
+    >
+  </div>
+
+  <div class="chip-row">
+    <span class="chip">still true — don't open /exhibit</span>
+    <span>two unreviewed bugs, excluded from the demo. Full detail on the other page.</span>
+  </div>
+
+  <div class="pillars">
+    <!-- 01 -->
+    <article class="pillar">
+      <div class="pillar__head">
+        <span class="pillar__num">01</span>
+        <div class="pillar__title-group">
+          <h2 class="pillar__title">Tooling — the right capability for the job</h2>
+          <span class="pillar__sub">not "I used Claude" — which plugin, when, and why</span>
+        </div>
+      </div>
+      <div class="pillar__body">
+        <div class="group">
+          <div class="group__label">Design &amp; build</div>
+          <ul>
+            <li>
+              <b>frontend-design</b> skill — set the whole visual language before writing CSS;
+              called back a second time specifically to fix a legibility problem, not by habit.
+            </li>
+            <li>
+              <b>jam</b> skill — invoked for a real multi-perspective decision, then deliberately
+              scoped down mid-flight once the lighter path was clearly right.
+            </li>
+            <li>
+              <b>ponytail / ponytail-audit</b> — whole-repo complexity audits, twice. Found a real
+              problem both times.
+            </li>
+          </ul>
+        </div>
+        <div class="group">
+          <div class="group__label">Verification &amp; handoff</div>
+          <ul>
+            <li>
+              <b>Playwright MCP</b> — the actual verification backbone: real clicks, real CDP touch
+              events, deliberately broke WebGL to reproduce a hardware failure before fixing it.
+            </li>
+            <li>
+              <b>fewer-permission-prompts</b> — built the committed allowlist from real transcript
+              usage, not guesses.
+            </li>
+            <li>
+              <b>Roughdraft</b> — handed a doc to a human reviewer with inline comments instead of a
+              wall of markdown.
+            </li>
+          </ul>
+        </div>
+        <div class="group">
+          <div class="group__label">When the tool failed</div>
+          <ul>
+            <li>
+              <code>/code-review</code> as a background subagent failed <b>twice</b> — a session
+              limit, then a stall.
+            </li>
+            <li>
+              Didn't retry blind a third time. Diagnosed it, ran the review directly with live
+              browser verification — <b>found two real bugs</b> the automated path never reached.
+            </li>
+          </ul>
+        </div>
+        <div class="group">
+          <div class="group__label">Knowing when to ask</div>
+          <ul>
+            <li>
+              <b>AskUserQuestion</b> at real forks: how much of a review to run, fix-vs-report
+              scope, repo visibility.
+            </li>
+            <li>
+              Skipped it once trust and urgency were established — proceeded on judgment instead of
+              re-confirming every step.
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="evidence">
+        <span class="evidence__label">Pull up</span>
+        <code>.claude/skills/verify-exhibit/</code>
+        <code>.claude/skills/add-trend/</code>
+        <code>git log --oneline</code>
+      </div>
+    </article>
+
+    <!-- 02 -->
+    <article class="pillar">
+      <div class="pillar__head">
+        <span class="pillar__num">02</span>
+        <div class="pillar__title-group">
+          <h2 class="pillar__title">Cost discipline</h2>
+          <span class="pillar__sub">what actually kept token spend down, concretely</span>
+        </div>
+      </div>
+      <div class="pillar__body">
+        <div class="group">
+          <div class="group__label">Cheaper by construction</div>
+          <ul>
+            <li>
+              <b>Forks, not fresh agents</b>, for the final review — share context <i>and</i> the
+              prompt cache. Four independent lenses without re-paying for the whole project four
+              times.
+            </li>
+            <li>
+              Every review <b>scoped to exact files</b> — never a blind "review the whole repo."
+            </li>
+            <li>
+              <b>Monitor</b> / wait-on-condition for CI status instead of manual sleep-polling
+              loops.
+            </li>
+          </ul>
+        </div>
+        <div class="group">
+          <div class="group__label">Stopped spending on purpose</div>
+          <ul>
+            <li>Killed a failing subagent after 2 attempts rather than a 3rd blind retry.</li>
+            <li>
+              Found scope creep (<code>/exhibit</code>) mid-session and
+              <b>explicitly declined to fix it</b> under deadline pressure — excluded it instead.
+            </li>
+            <li>
+              No heavy multi-agent Workflow orchestration except where genuinely warranted — most of
+              the session was direct execution.
+            </li>
+          </ul>
+        </div>
+        <div class="group">
+          <div class="group__label">Cheaper for every session after</div>
+          <ul>
+            <li>
+              <b>ponytail</b> used to shrink the codebase itself — 8 dead exports cut. Smaller repo,
+              less to load into context next time.
+            </li>
+            <li>
+              Small, scoped commits — every verification pass stays bounded instead of re-checking a
+              giant diff.
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="evidence">
+        <span class="evidence__label">Pull up</span>
+        <span style="color: var(--ink-dim)"
+          >commit <code>ffcd28c</code> — the review-pass commit, describes exactly this</span
+        >
+      </div>
+    </article>
+
+    <!-- 03 -->
+    <article class="pillar">
+      <div class="pillar__head">
+        <span class="pillar__num">03</span>
+        <div class="pillar__title-group">
+          <h2 class="pillar__title">Fast enough to prove it to a customer</h2>
+          <span class="pillar__sub">"yes, this is possible" as a working claim, not a mockup</span>
+        </div>
+      </div>
+      <div class="pillar__body">
+        <div class="group">
+          <div class="group__label">The sequence</div>
+          <ul>
+            <li>
+              Spec + plan written <b>before</b> any code — ~2 hrs to a verified, working prototype.
+            </li>
+            <li>Riskiest part — camera/gesture — built <b>last</b>, on purpose.</li>
+            <li>
+              Mouse-complete came first, so a live demo can <b>never</b> be blocked by a webcam
+              failure.
+            </li>
+          </ul>
+        </div>
+        <div class="group">
+          <div class="group__label">Why that's a sales decision, not just engineering</div>
+          <ul>
+            <li>Runs today, on a laptop, with <b>zero physical hardware</b>.</li>
+            <li>
+              Architecturally identical to what the real installation will run — the demo isn't a
+              lie the hardware has to catch up to.
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="evidence">
+        <span class="evidence__label">Pull up</span>
+        <code>docs/design-spec.md</code>
+        <code>docs/implementation-plan.md</code>
+        <span style="color: var(--ink-dim)">— written first, before any code</span>
+      </div>
+    </article>
+
+    <!-- 04 -->
+    <article class="pillar">
+      <div class="pillar__head">
+        <span class="pillar__num">04</span>
+        <div class="pillar__title-group">
+          <h2 class="pillar__title">Built for the physical object, not the screen</h2>
+          <span class="pillar__sub">told Claude this was hardware from the first prompt</span>
+        </div>
+      </div>
+      <div class="pillar__body">
+        <div class="group">
+          <div class="group__label">The instruction that shaped everything</div>
+          <ul>
+            <li>
+              Not "build a web app" — <b>"build the software half of a physical installation."</b>
+            </li>
+            <li>
+              Three replaceable seams (input · transport · light output) — chosen because those are
+              exactly the three things that differ between a laptop demo and the real thing.
+            </li>
+          </ul>
+        </div>
+        <div class="group">
+          <div class="group__label">Proof it's not just talk</div>
+          <ul>
+            <li>
+              The LED system isn't a CSS animation — it's a real <b>wire protocol</b>: governor,
+              gamma correction, temporal dithering, GRB channel order, COBS framing, CRC16.
+            </li>
+            <li>
+              Tested against a null sink <b>before any hardware exists</b>.
+              <code>npm run leds:demo</code> prints the actual bytes a physical controller would
+              receive, live, right now.
+            </li>
+          </ul>
+        </div>
+        <div class="group">
+          <div class="group__label">Decided now because it's expensive later</div>
+          <ul>
+            <li>
+              RGBW vs. RGB locked in early — retrofitting the white channel later means rewriting
+              every lighting effect.
+            </li>
+            <li>
+              LED count, wattage, and camera-mount ergonomics all worked out in advance, not guessed
+              at install time.
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="evidence">
+        <span class="evidence__label">Pull up</span>
+        <code>src/domain/lightFrame.ts</code>
+        <code>npm run leds:demo</code>
+        <code>docs/hardware-translation.md</code>
+      </div>
+    </article>
+
+    <!-- 05 -->
+    <article class="pillar">
+      <div class="pillar__head">
+        <span class="pillar__num">05</span>
+        <div class="pillar__title-group">
+          <h2 class="pillar__title">Handoff — because his team inherits AI-built work</h2>
+          <span class="pillar__sub">taken as initiative, not asked for</span>
+        </div>
+      </div>
+      <div class="pillar__body">
+        <div class="group">
+          <div class="group__label">The problem being solved</div>
+          <ul>
+            <li>
+              An AI-built codebase usually fails a team the moment the original person leaves — the
+              <b>"why" lived only in one chat history</b> and disappears with it.
+            </li>
+          </ul>
+        </div>
+        <div class="group">
+          <div class="group__label">For the next AI collaborator</div>
+          <ul>
+            <li>
+              <code>CLAUDE.md</code> ships <b>in the repo</b> and auto-loads for any future Claude
+              Code session — the next engineer's AI inherits the invariants immediately, not after
+              rediscovering them.
+            </li>
+            <li>
+              <code>.claude/settings.json</code> — committed allowlist from real usage, deliberately
+              excludes arbitrary-code-execution tools even though they were the most-used, because
+              this file grants permissions to whoever clones it.
+            </li>
+          </ul>
+        </div>
+        <div class="group">
+          <div class="group__label">For the next human</div>
+          <ul>
+            <li>
+              <code>CONTRIBUTING.md</code> — 15-min tour naming the exact 4 files that hold the
+              whole system.
+            </li>
+            <li>
+              <code>decisions.md</code> — not just what was decided, but
+              <b>what would change the decision</b>. Built to stop a teammate from "fixing" a
+              tradeoff they don't understand yet.
+            </li>
+          </ul>
+        </div>
+        <div class="group">
+          <div class="group__label">Enforced, not just hoped for</div>
+          <ul>
+            <li>
+              Two project skills package the <b>author's own judgment</b> — e.g. the log-vs-linear
+              call a teammate wouldn't know to make correctly on their own.
+            </li>
+            <li>CI runs the same standard on every future PR automatically — not left to trust.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="evidence">
+        <span class="evidence__label">Pull up</span>
+        <code>CLAUDE.md</code>
+        <code>CONTRIBUTING.md</code>
+        <code>docs/decisions.md</code>
+        <code>.claude/settings.json</code>
+      </div>
+    </article>
+  </div>
+
+  <section class="soundbites">
+    <div class="soundbites__head">
+      <span class="pillar__num">06</span>
+      <h2>If asked</h2>
+    </div>
+    <div class="soundbite-grid">
+      <div class="soundbite">
+        <div class="soundbite__q">Why fork agents instead of fresh ones?</div>
+        <div class="soundbite__a">
+          "Forks share my context and the prompt cache — genuinely independent judgment without
+          re-paying for the whole project four times."
+        </div>
+      </div>
+      <div class="soundbite">
+        <div class="soundbite__q">What happened when code review failed twice?</div>
+        <div class="soundbite__a">
+          "I didn't retry blind a third time — I diagnosed it, then ran the review myself with live
+          browser verification and found two real bugs."
+        </div>
+      </div>
+      <div class="soundbite">
+        <div class="soundbite__q">How do you actually keep cost down?</div>
+        <div class="soundbite__a">
+          "Scope every review to exact files, stop after a tool fails twice, and use ponytail to
+          keep the codebase itself small — cheaper every session after."
+        </div>
+      </div>
+      <div class="soundbite">
+        <div class="soundbite__q">Why build the LED code with no hardware yet?</div>
+        <div class="soundbite__a">
+          "Because the wire protocol is the expensive-to-get-wrong part — I wanted it tested before
+          a single LED was bought, not after."
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>companion to Exhibit Briefing — same repo, commit ffcd28c</footer>
+</div>
